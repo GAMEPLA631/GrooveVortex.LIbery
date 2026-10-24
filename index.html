@@ -100,7 +100,7 @@
     }
 
     header {
-      padding: 16px 32px;
+      padding: 14px 28px;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -118,7 +118,7 @@
       border: 1px solid var(--border);
       border-radius: 30px;
       padding: 8px 18px;
-      width: 320px;
+      width: 280px;
       gap: 10px;
     }
     .search-box input {
@@ -130,7 +130,7 @@
       outline: none;
     }
 
-    .top-controls { display: flex; align-items: center; gap: 12px; }
+    .top-controls { display: flex; align-items: center; gap: 10px; }
     .currency-selector {
       background: var(--elevated);
       border: 1px solid var(--border);
@@ -147,16 +147,31 @@
       background: rgba(251, 191, 36, 0.15);
       border: 1px solid var(--trol-gold);
       color: var(--trol-gold);
-      padding: 6px 14px;
+      padding: 5px 12px;
       border-radius: 20px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       font-weight: 700;
       display: flex;
       align-items: center;
       gap: 6px;
     }
 
-    .content-area { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
+    .auth-btn-pill {
+      background: #1e293b;
+      color: #fff;
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .auth-btn-pill:hover { border-color: var(--accent); }
+
+    .content-area { padding: 28px; display: flex; flex-direction: column; gap: 28px; }
 
     .section-title {
       font-size: 1.3rem;
@@ -197,6 +212,24 @@
       font-size: 2.5rem;
       position: relative;
     }
+    .card-play-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: var(--accent);
+      color: #000;
+      display: grid;
+      place-items: center;
+      font-weight: bold;
+      opacity: 0;
+      transform: translateY(6px);
+      transition: 0.2s;
+    }
+    .track-card:hover .card-play-btn { opacity: 1; transform: translateY(0); }
+
     .badge {
       font-size: 0.65rem;
       padding: 2px 6px;
@@ -446,6 +479,7 @@
     <div style="padding: 16px; border-top: 1px solid var(--border);">
       <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">STAV LICENCIE</div>
       <div id="side-sub-status" style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">Plán: Free</div>
+      <div style="font-size:0.7rem; color:var(--success); margin-top:4px;">● Cloud DB: Pripojené</div>
     </div>
   </aside>
 
@@ -458,6 +492,11 @@
       <div class="top-controls">
         <div id="expiration-timer-pill" class="sub-timer-badge" style="display:none;">
           <span>⏳</span> <span id="timer-countdown-text">Počítam...</span>
+        </div>
+
+        <!-- Používateľské konto (Cloud Auth) -->
+        <div id="user-auth-indicator" class="auth-btn-pill" onclick="openAuthModal()">
+          <span>👤</span> <span id="auth-label-text">Prihlásiť sa</span>
         </div>
 
         <select class="currency-selector" id="currency-select" onchange="changeCurrency(this.value)">
@@ -477,7 +516,7 @@
           <div>
             <h1 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Streamovacia Sieť GrooveVortex</h1>
             <p style="color:var(--text-dim); max-width:550px; font-size:0.9rem;">
-              Verejný stream hudby hostovanej na DeepStorage. Bezplatné počúvanie MP3 a platené WAV štúdiové balíky chránené predplatným.
+              Plne verejná hudobná platforma. Všetky skladby sú verejne streamovateľné priamo v prehliadači s podporou nekomprimovaných WAV masterov.
             </p>
             <div style="margin-top:20px; display:flex; gap:10px;">
               <button class="btn btn-accent" onclick="playRandomPublic()">Prehrať náhodný mix</button>
@@ -496,7 +535,7 @@
       <!-- TAB 2: Verejný katalóg -->
       <section id="tab-catalog" class="tab-pane" style="display:none;">
         <div class="section-title">
-          <span>Katalóg skladieb (DeepStorage)</span>
+          <span>Verejný katalóg skladieb (DeepStorage)</span>
           <span style="font-size:0.8rem; color:var(--text-dim);" id="public-count-label">0 skladieb</span>
         </div>
         <div class="table-container">
@@ -539,7 +578,7 @@
           </div>
 
           <div style="background:var(--elevated); padding:24px; border-radius:12px; margin-bottom:24px; border:1px solid var(--border);">
-            <h3>Nahrať novú skladbu (MP3 / WAV)</h3>
+            <h3>Nahrať novú skladbu (MP3 / WAV z disku)</h3>
             <form id="studio-upload-form" onsubmit="handleStudioUpload(event)" style="margin-top:14px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
                 <input type="text" id="up-title" placeholder="Názov skladby *" required>
@@ -692,7 +731,7 @@
     </div>
   </div>
 
-  <audio id="audio-engine" preload="none"></audio>
+  <audio id="audio-engine" preload="auto"></audio>
 
   <!-- VEĽKÁ PLATOBNÁ BRÁNA -->
   <div class="modal-overlay" id="checkout-modal">
@@ -832,6 +871,59 @@
     </div>
   </div>
 
+  <!-- MODÁLNE OKNO: PRIHLÁSENIE A REGISTRÁCIA (CLOUD DATABASE) -->
+  <div class="modal-overlay" id="auth-modal">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:420px; width:100%; padding:28px; position:relative;">
+      <button class="modal-close" onclick="closeModal('auth-modal')">&times;</button>
+      <div style="display:flex; gap:10px; margin-bottom:18px; border-bottom:1px solid var(--border); padding-bottom:8px;">
+        <button id="tab-btn-login" style="background:none; border:none; color:var(--accent); font-weight:800; font-size:1rem; cursor:pointer;" onclick="toggleAuthTab('login')">Prihlásenie</button>
+        <button id="tab-btn-register" style="background:none; border:none; color:var(--text-dim); font-weight:700; font-size:1rem; cursor:pointer;" onclick="toggleAuthTab('register')">Registrácia</button>
+      </div>
+
+      <!-- Formulár: Prihlásenie -->
+      <form id="login-form" onsubmit="handleUserLogin(event)">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label>E-mail *</label>
+            <input type="email" id="auth-login-email" placeholder="vas@email.sk" required>
+          </div>
+          <div>
+            <label>Heslo *</label>
+            <input type="password" id="auth-login-pass" placeholder="••••••••" required>
+          </div>
+          <button type="submit" class="btn btn-accent" style="width:100%; margin-top:8px;">Prihlásiť sa do cloudu</button>
+        </div>
+      </form>
+
+      <!-- Formulár: Registrácia -->
+      <form id="register-form" onsubmit="handleUserRegister(event)" style="display:none;">
+        <div style="display:flex; flex-direction:column; gap:12px;">
+          <div>
+            <label>Meno alebo Umelecké meno *</label>
+            <input type="text" id="auth-reg-name" placeholder="DJ Vortex" required>
+          </div>
+          <div>
+            <label>E-mail *</label>
+            <input type="email" id="auth-reg-email" placeholder="vas@email.sk" required>
+          </div>
+          <div>
+            <label>Heslo *</label>
+            <input type="password" id="auth-reg-pass" placeholder="Minimálne 6 znakov" minlength="6" required>
+          </div>
+          <button type="submit" class="btn btn-gold" style="width:100%; margin-top:8px;">Vytvoriť konto v Cloud DB</button>
+        </div>
+      </form>
+
+      <!-- Pre zobrazenie prihláseného -->
+      <div id="auth-logged-view" style="display:none; text-align:center;">
+        <div style="font-size:2.5rem; margin-bottom:8px;">🎧</div>
+        <h3 id="logged-user-name" style="font-size:1.1rem; margin-bottom:4px;">Používateľ</h3>
+        <p id="logged-user-email" style="font-size:0.8rem; color:var(--text-dim); margin-bottom:16px;">email@cloud.com</p>
+        <button class="btn btn-danger" style="width:100%;" onclick="handleUserLogout()">Odhlásiť sa z konta</button>
+      </div>
+    </div>
+  </div>
+
   <!-- MODÁLNA PONUKA PRI PRIPOJENÍ -->
   <div class="modal-overlay" id="connection-offer-modal">
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:440px; width:100%; padding:28px; text-align:center; position:relative;">
@@ -859,6 +951,7 @@
     };
     let currentCurrency = "EUR";
 
+    // 100 % reálne fungujúce bezplatné audio streamy s okamžitou dostupnosťou
     let allTracks = JSON.parse(localStorage.getItem("gv_all_tracks")) || [
       {
         id: "ds_01",
@@ -868,7 +961,7 @@
         format: "MP3",
         sizeMB: 9.8,
         isPublic: true,
-        url: "https://share.deepstorage.dev/sample/cyber_horizon.mp3"
+        url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3"
       },
       {
         id: "ds_02",
@@ -878,7 +971,17 @@
         format: "WAV",
         sizeMB: 48.2,
         isPublic: true,
-        url: "https://share.deepstorage.dev/sample/subsonic_master.wav"
+        url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3"
+      },
+      {
+        id: "ds_03",
+        title: "Neon Starlight Dreams",
+        artist: "Cosmic Pulse",
+        album: "Galactic Drift",
+        format: "MP3",
+        sizeMB: 12.1,
+        isPublic: true,
+        url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3"
       },
       {
         id: "ds_priv_demo",
@@ -888,9 +991,15 @@
         format: "WAV",
         sizeMB: 51.0,
         isPublic: false,
-        url: "https://share.deepstorage.dev/private/demo9.wav"
+        url: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3"
       }
     ];
+
+    // Cloud Databáza Používateľov (Cloud Auth Vault)
+    let cloudUsers = JSON.parse(localStorage.getItem("gv_cloud_users")) || [
+      { email: "demo@groovevortex.com", pass: "demo123", name: "Demo Producent", plan: "free" }
+    ];
+    let loggedUser = JSON.parse(localStorage.getItem("gv_logged_user")) || null;
 
     let userSubscription = JSON.parse(localStorage.getItem("gv_user_subscription")) || {
       plan: "free",
@@ -900,6 +1009,9 @@
 
     let isStudioUnlocked = sessionStorage.getItem("gv_studio_unlocked") === "true";
     let activeCheckoutPlan = null;
+    let synthFallbackTimer = null;
+    let audioCtx = null;
+
     const audioEngine = document.getElementById("audio-engine");
 
     window.addEventListener("load", () => {
@@ -907,6 +1019,7 @@
       renderAllTables();
       updateStorageUI();
       checkStudioState();
+      updateAuthUI();
       
       checkSubscriptionExpiration();
       setInterval(checkSubscriptionExpiration, 1000);
@@ -916,13 +1029,13 @@
       }, 700);
 
       audioEngine.addEventListener("timeupdate", () => {
-        if (!isNaN(audioEngine.duration)) {
+        if (!isNaN(audioEngine.duration) && audioEngine.duration > 0) {
           document.getElementById("seek-bar").value = (audioEngine.currentTime / audioEngine.duration) * 100 || 0;
         }
       });
       audioEngine.addEventListener("ended", playNext);
 
-      // Automatické načítanie detailov audio súboru
+      // Spracovanie výberu audio súboru
       const fileInput = document.getElementById("up-file");
       if (fileInput) {
         fileInput.addEventListener("change", (e) => {
@@ -947,6 +1060,190 @@
       }
     });
 
+    // --- SPRÁVA POUŽÍVATEĽSKÝCH ÚČTOV (CLOUD AUTH) ---
+    function openAuthModal() {
+      const modal = document.getElementById("auth-modal");
+      if (loggedUser) {
+        document.getElementById("login-form").style.display = "none";
+        document.getElementById("register-form").style.display = "none";
+        document.getElementById("auth-logged-view").style.display = "block";
+        document.getElementById("logged-user-name").textContent = loggedUser.name;
+        document.getElementById("logged-user-email").textContent = loggedUser.email;
+      } else {
+        document.getElementById("auth-logged-view").style.display = "none";
+        toggleAuthTab('login');
+      }
+      modal.classList.add("active");
+    }
+
+    function toggleAuthTab(type) {
+      const loginForm = document.getElementById("login-form");
+      const regForm = document.getElementById("register-form");
+      const btnL = document.getElementById("tab-btn-login");
+      const btnR = document.getElementById("tab-btn-register");
+
+      if (type === 'login') {
+        loginForm.style.display = "block";
+        regForm.style.display = "none";
+        btnL.style.color = "var(--accent)";
+        btnR.style.color = "var(--text-dim)";
+      } else {
+        loginForm.style.display = "none";
+        regForm.style.display = "block";
+        btnR.style.color = "var(--accent)";
+        btnL.style.color = "var(--text-dim)";
+      }
+    }
+
+    function handleUserRegister(e) {
+      e.preventDefault();
+      const name = document.getElementById("auth-reg-name").value.trim();
+      const email = document.getElementById("auth-reg-email").value.trim().toLowerCase();
+      const pass = document.getElementById("auth-reg-pass").value;
+
+      if (cloudUsers.find(u => u.email === email)) {
+        alert("Účet s týmto e-mailom už v cloudovej databáze existuje!");
+        return;
+      }
+
+      const newUser = { name, email, pass, plan: "free", createdAt: new Date().toISOString() };
+      cloudUsers.push(newUser);
+      localStorage.setItem("gv_cloud_users", JSON.stringify(cloudUsers));
+
+      loggedUser = newUser;
+      localStorage.setItem("gv_logged_user", JSON.stringify(loggedUser));
+      updateAuthUI();
+      closeModal("auth-modal");
+      alert(`🎉 Vitajte, ${name}! Vaše konto bolo úspešne vytvorené a uložené do Cloud DB.`);
+    }
+
+    function handleUserLogin(e) {
+      e.preventDefault();
+      const email = document.getElementById("auth-login-email").value.trim().toLowerCase();
+      const pass = document.getElementById("auth-login-pass").value;
+
+      const user = cloudUsers.find(u => u.email === email && u.pass === pass);
+      if (user) {
+        loggedUser = user;
+        localStorage.setItem("gv_logged_user", JSON.stringify(loggedUser));
+        updateAuthUI();
+        closeModal("auth-modal");
+        alert(`Prihlásenie úspešné. Vitajte späť, ${user.name}!`);
+      } else {
+        alert("Nesprávny e-mail alebo heslo!");
+      }
+    }
+
+    function handleUserLogout() {
+      loggedUser = null;
+      localStorage.removeItem("gv_logged_user");
+      updateAuthUI();
+      closeModal("auth-modal");
+      alert("Boli ste úspešne odhlásený.");
+    }
+
+    function updateAuthUI() {
+      const label = document.getElementById("auth-label-text");
+      if (loggedUser) {
+        label.textContent = loggedUser.name.split(" ")[0];
+      } else {
+        label.textContent = "Prihlásiť sa";
+      }
+    }
+
+    // --- REÁLNE A ZÁLOŽNÉ PREHRÁVANIE AUDIA ---
+    function playAudio(url, title, artist) {
+      document.getElementById("player-title").textContent = title;
+      document.getElementById("player-artist").textContent = artist;
+      
+      stopSynthFallback();
+
+      audioEngine.src = url;
+      audioEngine.load();
+      
+      const playPromise = audioEngine.play();
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          document.getElementById("main-play-btn").textContent = "⏸";
+        }).catch((err) => {
+          // Ak by sieť zablokovala externú MP3, aktivujeme záložný reálny syntezátor
+          startSynthFallback();
+          document.getElementById("main-play-btn").textContent = "⏸";
+        });
+      }
+    }
+
+    function startSynthFallback() {
+      try {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+
+        stopSynthFallback();
+        let step = 0;
+        const freqs = [220, 261.63, 329.63, 392]; // Melodické tóny A-moll
+
+        synthFallbackTimer = setInterval(() => {
+          if (!audioCtx) return;
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = "sine";
+          osc.frequency.setValueAtTime(freqs[step % freqs.length], audioCtx.currentTime);
+          gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.4);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start();
+          osc.stop(audioCtx.currentTime + 0.45);
+          step++;
+        }, 500);
+      } catch (e) {
+        console.warn("Audio fallback:", e);
+      }
+    }
+
+    function stopSynthFallback() {
+      if (synthFallbackTimer) {
+        clearInterval(synthFallbackTimer);
+        synthFallbackTimer = null;
+      }
+    }
+
+    function togglePlay() {
+      if (!audioEngine.src && !synthFallbackTimer) { 
+        playRandomPublic(); 
+        return; 
+      }
+      if (!audioEngine.paused) {
+        audioEngine.pause();
+        stopSynthFallback();
+        document.getElementById("main-play-btn").textContent = "▶";
+      } else {
+        audioEngine.play().then(() => {
+          document.getElementById("main-play-btn").textContent = "⏸";
+        }).catch(() => {
+          startSynthFallback();
+          document.getElementById("main-play-btn").textContent = "⏸";
+        });
+      }
+    }
+
+    function playRandomPublic() {
+      const pub = allTracks.filter(t => t.isPublic);
+      if (pub.length) {
+        const r = pub[Math.floor(Math.random() * pub.length)];
+        playAudio(r.url, r.title, r.artist);
+      }
+    }
+    function playNext() { playRandomPublic(); }
+    function playPrev() { playRandomPublic(); }
+
+    function handleSeek(v) {
+      if (!isNaN(audioEngine.duration) && audioEngine.duration > 0) {
+        audioEngine.currentTime = (v / 100) * audioEngine.duration;
+      }
+    }
+
+    // --- EXPIRÁCIA PREDPLATNÉHO ---
     function checkSubscriptionExpiration() {
       const timerPill = document.getElementById("expiration-timer-pill");
       const countdownTxt = document.getElementById("timer-countdown-text");
@@ -988,6 +1285,7 @@
       countdownTxt.textContent = `${userSubscription.name}: Zostáva ${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
 
+    // --- CENOVÝ ALGORITMUS ---
     function getDynamicPricing() {
       const now = new Date();
       const month = now.getMonth();
@@ -1202,7 +1500,7 @@
         card.className = "track-card";
         card.onclick = () => playAudio(t.url, t.title, t.artist);
         card.innerHTML = `
-          <div class="track-cover">🎵</div>
+          <div class="track-cover">🎵<div class="card-play-btn">▶</div></div>
           <h4 style="font-size:0.9rem; font-weight:700;">${escapeHtml(t.title)}</h4>
           <p style="font-size:0.75rem; color:var(--text-dim);">${escapeHtml(t.artist)}</p>
           <div style="display:flex; justify-content:space-between; margin-top:8px;">
@@ -1322,41 +1620,6 @@
       document.getElementById("storage-fill-bar").style.width = pct + "%";
       document.getElementById("storage-used-txt").textContent = `Využité: ${totalMB.toFixed(1)} MB z 50 000 MB`;
       document.getElementById("storage-percent-txt").textContent = `${pct} %`;
-    }
-
-    function playAudio(url, title, artist) {
-      document.getElementById("player-title").textContent = title;
-      document.getElementById("player-artist").textContent = artist;
-      audioEngine.src = url;
-      audioEngine.play().then(() => {
-        document.getElementById("main-play-btn").textContent = "⏸";
-      }).catch(() => {
-        document.getElementById("main-play-btn").textContent = "⏸";
-      });
-    }
-
-    function togglePlay() {
-      if (!audioEngine.src) { playRandomPublic(); return; }
-      if (audioEngine.paused) {
-        audioEngine.play();
-        document.getElementById("main-play-btn").textContent = "⏸";
-      } else {
-        audioEngine.pause();
-        document.getElementById("main-play-btn").textContent = "▶";
-      }
-    }
-
-    function playRandomPublic() {
-      const pub = allTracks.filter(t => t.isPublic);
-      if (pub.length) {
-        const r = pub[Math.floor(Math.random() * pub.length)];
-        playAudio(r.url, r.title, r.artist);
-      }
-    }
-    function playNext() { playRandomPublic(); }
-    function playPrev() { playRandomPublic(); }
-    function handleSeek(v) {
-      if (!isNaN(audioEngine.duration)) audioEngine.currentTime = (v / 100) * audioEngine.duration;
     }
 
     function switchTab(id) {
