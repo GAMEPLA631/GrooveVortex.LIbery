@@ -494,7 +494,6 @@
           <span>⏳</span> <span id="timer-countdown-text">Počítam...</span>
         </div>
 
-        <!-- Používateľské konto (Cloud Auth) -->
         <div id="user-auth-indicator" class="auth-btn-pill" onclick="openAuthModal()">
           <span>👤</span> <span id="auth-label-text">Prihlásiť sa</span>
         </div>
@@ -516,7 +515,7 @@
           <div>
             <h1 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Streamovacia Sieť GrooveVortex</h1>
             <p style="color:var(--text-dim); max-width:550px; font-size:0.9rem;">
-              Plne verejná hudobná platforma. Všetky skladby sú verejne streamovateľné priamo v prehliadači s podporou nekomprimovaných WAV masterov.
+              Plne verejná hudobná platforma. Všetky skladby sú verejne streamovateľné priamo v prehliadači s podporou nekomprimovaných WAV masterov a trvalým úložiskom.
             </p>
             <div style="margin-top:20px; display:flex; gap:10px;">
               <button class="btn btn-accent" onclick="playRandomPublic()">Prehrať náhodný mix</button>
@@ -871,7 +870,7 @@
     </div>
   </div>
 
-  <!-- MODÁLNE OKNO: PRIHLÁSENIE A REGISTRÁCIA (CLOUD DATABASE) -->
+  <!-- MODÁLNE OKNO: PRIHLÁSENIE A REGISTRÁCIA -->
   <div class="modal-overlay" id="auth-modal">
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:420px; width:100%; padding:28px; position:relative;">
       <button class="modal-close" onclick="closeModal('auth-modal')">&times;</button>
@@ -880,7 +879,6 @@
         <button id="tab-btn-register" style="background:none; border:none; color:var(--text-dim); font-weight:700; font-size:1rem; cursor:pointer;" onclick="toggleAuthTab('register')">Registrácia</button>
       </div>
 
-      <!-- Formulár: Prihlásenie -->
       <form id="login-form" onsubmit="handleUserLogin(event)">
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div>
@@ -895,7 +893,6 @@
         </div>
       </form>
 
-      <!-- Formulár: Registrácia -->
       <form id="register-form" onsubmit="handleUserRegister(event)" style="display:none;">
         <div style="display:flex; flex-direction:column; gap:12px;">
           <div>
@@ -914,7 +911,6 @@
         </div>
       </form>
 
-      <!-- Pre zobrazenie prihláseného -->
       <div id="auth-logged-view" style="display:none; text-align:center;">
         <div style="font-size:2.5rem; margin-bottom:8px;">🎧</div>
         <h3 id="logged-user-name" style="font-size:1.1rem; margin-bottom:4px;">Používateľ</h3>
@@ -950,6 +946,56 @@
       CZK: { symbol: "Kč", rate: 25.2 }
     };
     let currentCurrency = "EUR";
+
+    // --- TRVALÁ DATABÁZA INDEXEDDB PRE AUDIO SÚBORY ---
+    const DB_NAME = "GrooveVortexAudioDB";
+    const STORE_NAME = "audio_blobs";
+
+    function openAudioDB() {
+      return new Promise((resolve, reject) => {
+        const req = indexedDB.open(DB_NAME, 1);
+        req.onupgradeneeded = (e) => {
+          const db = e.target.result;
+          if (!db.objectStoreNames.contains(STORE_NAME)) {
+            db.createObjectStore(STORE_NAME);
+          }
+        };
+        req.onsuccess = () => resolve(req.result);
+        req.onerror = () => reject(req.error);
+      });
+    }
+
+    async function saveAudioBlob(id, fileOrBlob) {
+      try {
+        const db = await openAudioDB();
+        return new Promise((resolve, reject) => {
+          const tx = db.transaction(STORE_NAME, "readwrite");
+          tx.objectStore(STORE_NAME).put(fileOrBlob, id);
+          tx.oncomplete = () => resolve();
+          tx.onerror = () => reject(tx.error);
+        });
+      } catch(e) { console.error("IDB save error:", e); }
+    }
+
+    async function getAudioBlob(id) {
+      try {
+        const db = await openAudioDB();
+        return new Promise((resolve) => {
+          const tx = db.transaction(STORE_NAME, "readonly");
+          const req = tx.objectStore(STORE_NAME).get(id);
+          req.onsuccess = () => resolve(req.result);
+          req.onerror = () => resolve(null);
+        });
+      } catch(e) { return null; }
+    }
+
+    async function deleteAudioBlob(id) {
+      try {
+        const db = await openAudioDB();
+        const tx = db.transaction(STORE_NAME, "readwrite");
+        tx.objectStore(STORE_NAME).delete(id);
+      } catch(e) {}
+    }
 
     // 100 % reálne fungujúce bezplatné audio streamy s okamžitou dostupnosťou
     let allTracks = JSON.parse(localStorage.getItem("gv_all_tracks")) || [
@@ -995,7 +1041,6 @@
       }
     ];
 
-    // Cloud Databáza Používateľov (Cloud Auth Vault)
     let cloudUsers = JSON.parse(localStorage.getItem("gv_cloud_users")) || [
       { email: "demo@groovevortex.com", pass: "demo123", name: "Demo Producent", plan: "free" }
     ];
@@ -1011,6 +1056,7 @@
     let activeCheckoutPlan = null;
     let synthFallbackTimer = null;
     let audioCtx = null;
+    let currentPlayingTrackId = null;
 
     const audioEngine = document.getElementById("audio-engine");
 
@@ -1035,7 +1081,6 @@
       });
       audioEngine.addEventListener("ended", playNext);
 
-      // Spracovanie výberu audio súboru
       const fileInput = document.getElementById("up-file");
       if (fileInput) {
         fileInput.addEventListener("change", (e) => {
@@ -1060,7 +1105,7 @@
       }
     });
 
-    // --- SPRÁVA POUŽÍVATEĽSKÝCH ÚČTOV (CLOUD AUTH) ---
+    // --- SPRÁVA POUŽÍVATEĽSKÝCH ÚČTOV ---
     function openAuthModal() {
       const modal = document.getElementById("auth-modal");
       if (loggedUser) {
@@ -1151,14 +1196,25 @@
       }
     }
 
-    // --- REÁLNE A ZÁLOŽNÉ PREHRÁVANIE AUDIA ---
-    function playAudio(url, title, artist) {
+    // --- REÁLNE A TRVALÉ PREHRÁVANIE AUDIA AJ PO OBNOVE STRÁNKY ---
+    async function playAudio(url, title, artist, trackId) {
       document.getElementById("player-title").textContent = title;
       document.getElementById("player-artist").textContent = artist;
+      currentPlayingTrackId = trackId;
       
       stopSynthFallback();
 
-      audioEngine.src = url;
+      let targetSrc = url;
+
+      // Ak je audio uložené v trvalej databáze IndexedDB, načítame ho aj po F5 obnovení
+      if (trackId) {
+        const storedBlob = await getAudioBlob(trackId);
+        if (storedBlob) {
+          targetSrc = URL.createObjectURL(storedBlob);
+        }
+      }
+
+      audioEngine.src = targetSrc;
       audioEngine.load();
       
       const playPromise = audioEngine.play();
@@ -1166,7 +1222,6 @@
         playPromise.then(() => {
           document.getElementById("main-play-btn").textContent = "⏸";
         }).catch((err) => {
-          // Ak by sieť zablokovala externú MP3, aktivujeme záložný reálny syntezátor
           startSynthFallback();
           document.getElementById("main-play-btn").textContent = "⏸";
         });
@@ -1180,7 +1235,7 @@
 
         stopSynthFallback();
         let step = 0;
-        const freqs = [220, 261.63, 329.63, 392]; // Melodické tóny A-moll
+        const freqs = [220, 261.63, 329.63, 392];
 
         synthFallbackTimer = setInterval(() => {
           if (!audioCtx) return;
@@ -1231,7 +1286,7 @@
       const pub = allTracks.filter(t => t.isPublic);
       if (pub.length) {
         const r = pub[Math.floor(Math.random() * pub.length)];
-        playAudio(r.url, r.title, r.artist);
+        playAudio(r.url, r.title, r.artist, r.id);
       }
     }
     function playNext() { playRandomPublic(); }
@@ -1429,12 +1484,12 @@
       }, 1400);
     }
 
-    function handleTrackAction(trackId, format) {
+    async function handleTrackAction(trackId, format) {
       const track = allTracks.find(t => t.id === trackId);
       if (!track) return;
 
       if (format === "MP3") {
-        playAudio(track.url, track.title, track.artist);
+        playAudio(track.url, track.title, track.artist, track.id);
         return;
       }
 
@@ -1445,8 +1500,21 @@
           return;
         }
 
-        alert(`💎 LICENCIA OVERENÁ:\n\nSťahujem štúdiový súbor "${track.title}" z úložiska DeepStorage.dev`);
-        window.open(track.url, "_blank");
+        alert(`💎 LICENCIA OVERENÁ:\n\nSťahujem štúdiový súbor "${track.title}"`);
+        
+        // Získanie súboru z IndexedDB alebo z URL
+        const storedBlob = await getAudioBlob(track.id);
+        let downloadUrl = track.url;
+        if (storedBlob) {
+          downloadUrl = URL.createObjectURL(storedBlob);
+        }
+
+        const a = document.createElement("a");
+        a.href = downloadUrl;
+        a.download = `${track.title}.${track.format.toLowerCase()}`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
       }
     }
 
@@ -1482,7 +1550,7 @@
             ${isWav ? (hasAccess ? '<span style="color:var(--success); font-size:0.75rem;">💎 Plné Členstvo</span>' : '<span class="badge badge-locked">🔒 Platený WAV</span>') : '<span style="color:var(--accent); font-size:0.75rem;">✓ Voľný Stream</span>'}
           </td>
           <td>
-            <button class="btn btn-accent" style="padding:4px 10px; font-size:0.75rem;" onclick="playAudio('${t.url}', '${escapeHtml(t.title)}', '${escapeHtml(t.artist)}')">▶ Prehrať</button>
+            <button class="btn btn-accent" style="padding:4px 10px; font-size:0.75rem;" onclick="playAudio('${t.url}', '${escapeHtml(t.title)}', '${escapeHtml(t.artist)}', '${t.id}')">▶ Prehrať</button>
             <button class="btn btn-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="handleTrackAction('${t.id}', '${t.format}')">
               ${isWav ? 'Stiahnuť WAV 💎' : 'Stiahnuť'}
             </button>
@@ -1498,7 +1566,7 @@
       allTracks.filter(t => t.isPublic).slice(0, 4).forEach(t => {
         const card = document.createElement("div");
         card.className = "track-card";
-        card.onclick = () => playAudio(t.url, t.title, t.artist);
+        card.onclick = () => playAudio(t.url, t.title, t.artist, t.id);
         card.innerHTML = `
           <div class="track-cover">🎵<div class="card-play-btn">▶</div></div>
           <h4 style="font-size:0.9rem; font-weight:700;">${escapeHtml(t.title)}</h4>
@@ -1537,7 +1605,8 @@
       checkStudioState();
     }
 
-    function handleStudioUpload(e) {
+    // Nahrávanie a uloženie do trvalej databázy IndexedDB
+    async function handleStudioUpload(e) {
       e.preventDefault();
       const fileInput = document.getElementById("up-file");
       const file = fileInput.files[0];
@@ -1554,17 +1623,21 @@
         return;
       }
 
-      const audioBlobUrl = URL.createObjectURL(file);
+      const trackId = "ds_" + Date.now().toString(36);
+
+      // Trvalé uloženie audio súboru do IndexedDB pre bezpečné prehrávanie aj po obnove
+      await saveAudioBlob(trackId, file);
+
       const isPub = document.getElementById("up-visibility").value === "public";
       const newT = {
-        id: "ds_" + Date.now().toString(36),
+        id: trackId,
         title: document.getElementById("up-title").value.trim() || file.name.replace(/\.[^/.]+$/, ""),
         artist: document.getElementById("up-artist").value.trim(),
         album: document.getElementById("up-album").value.trim() || "Single",
         format: document.getElementById("up-format").value,
         sizeMB: size,
         isPublic: isPub,
-        url: audioBlobUrl
+        url: "local://" + trackId
       };
 
       allTracks.unshift(newT);
@@ -1572,7 +1645,7 @@
       renderAllTables();
       updateStorageUI();
       document.getElementById("studio-upload-form").reset();
-      alert(`Skladba "${newT.title}" bola úspešne nahratá z počítača do štúdia!`);
+      alert(`Skladba "${newT.title}" bola úspešne uložená a zostane prehrávateľná aj po obnove stránky!`);
     }
 
     function renderStudioTable() {
@@ -1605,8 +1678,9 @@
       }
     }
 
-    function deleteTrack(id) {
+    async function deleteTrack(id) {
       if (confirm("Zmazať túto skladbu?")) {
+        await deleteAudioBlob(id);
         allTracks = allTracks.filter(x => x.id !== id);
         localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
         renderAllTables();
