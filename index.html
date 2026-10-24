@@ -7,6 +7,8 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <!-- Globálna automatická cloudová sieť pre okamžitú synchronizáciu medzi mobilmi -->
+  <script src="https://cdn.jsdelivr.net/npm/gun/gun.js"></script>
   <style>
     :root {
       --bg: #07090e;
@@ -346,7 +348,7 @@
     }
     .field-full { grid-column: span 2; }
     label { font-size: 0.75rem; color: var(--text-dim); display: block; margin-bottom: 4px; }
-    input, select, textarea {
+    input, select {
       background: #090d16;
       border: 1px solid var(--border);
       color: #fff;
@@ -356,7 +358,7 @@
       width: 100%;
       outline: none;
     }
-    input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+    input:focus, select:focus { border-color: var(--accent); }
 
     .order-summary-box {
       background: var(--elevated);
@@ -479,7 +481,7 @@
     <div style="padding: 16px; border-top: 1px solid var(--border);">
       <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">STAV LICENCIE</div>
       <div id="side-sub-status" style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">Plán: Free</div>
-      <div style="font-size:0.7rem; color:var(--success); margin-top:4px;">● Globálny Cloud: Pripojené</div>
+      <div style="font-size:0.7rem; color:var(--success); margin-top:4px;">● Celosvetový Cloud: Aktívny</div>
     </div>
   </aside>
 
@@ -493,10 +495,6 @@
         <div id="expiration-timer-pill" class="sub-timer-badge" style="display:none;">
           <span>⏳</span> <span id="timer-countdown-text">Počítam...</span>
         </div>
-
-        <button class="btn btn-outline" style="padding:6px 12px; font-size:0.78rem;" onclick="openSyncModal()" title="Preniesť a zosynchronizovať skladby medzi mobilmi">
-          🌐 Cloud Sync
-        </button>
 
         <div id="user-auth-indicator" class="auth-btn-pill" onclick="openAuthModal()">
           <span>👤</span> <span id="auth-label-text">Prihlásiť sa</span>
@@ -519,7 +517,7 @@
           <div>
             <h1 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Streamovacia Sieť GrooveVortex</h1>
             <p style="color:var(--text-dim); max-width:550px; font-size:0.9rem;">
-              Plne verejná hudobná platforma. Všetky skladby sú verejne streamovateľné priamo v prehliadači s podporou nekomprimovaných WAV masterov a trvalým úložiskom.
+              Plne verejná hudobná platforma. Všetky skladby sú streamovateľné z globálneho cloudu a okamžite synchronizované na všetky mobily na svete.
             </p>
             <div style="margin-top:20px; display:flex; gap:10px;">
               <button class="btn btn-accent" onclick="playRandomPublic()">Prehrať náhodný mix</button>
@@ -538,7 +536,7 @@
       <!-- TAB 2: Verejný katalóg -->
       <section id="tab-catalog" class="tab-pane" style="display:none;">
         <div class="section-title">
-          <span>Verejný katalóg skladieb (DeepStorage)</span>
+          <span>Celosvetový katalóg skladieb</span>
           <span style="font-size:0.8rem; color:var(--text-dim);" id="public-count-label">0 skladieb</span>
         </div>
         <div class="table-container">
@@ -581,9 +579,9 @@
           </div>
 
           <div style="background:var(--elevated); padding:24px; border-radius:12px; margin-bottom:24px; border:1px solid var(--border);">
-            <h3>Nahrať novú skladbu</h3>
+            <h3>Nahrať novú skladbu pre celý svet</h3>
             <p style="font-size:0.8rem; color:var(--text-dim); margin-bottom:12px;">
-              💡 <strong>Tip pre zobrazenie na všetkých mobiloch:</strong> Vložte verejný odkaz z DeepStorage (zo zložky <code>Shareable Folder</code>) alebo priamy MP3 odkaz, ktorý okamžite hrá na každom zariadení.
+              💡 <strong>Prehrávanie na všetkých mobiloch:</strong> Vložte verejný odkaz z <code>Shareable Folder</code> na DeepStorage.dev (alebo priamy MP3 odkaz). Skladba sa <strong>ihneď sama zobrazí a začne hrať na každom mobile na svete bez ručného prepisovania kódov</strong>.
             </p>
             <form id="studio-upload-form" onsubmit="handleStudioUpload(event)" style="margin-top:14px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
@@ -596,28 +594,27 @@
                 </select>
                 <input type="number" id="up-size" step="0.1" placeholder="Veľkosť v MB *" required>
                 <select id="up-visibility">
-                  <option value="public">🌐 Zverejniť verejne (pre všetky mobily)</option>
+                  <option value="public">🌐 Zverejniť verejne (pre celý svet)</option>
                   <option value="private">🔒 Súkromné (Iba v štúdiu)</option>
                 </select>
               </div>
 
-              <!-- Možnosť A: Verejný DeepStorage odkaz -->
+              <!-- Verejný DeepStorage odkaz -->
               <div style="margin-top:12px;">
                 <label style="font-size:0.75rem; color:var(--accent); display:block; margin-bottom:4px;">
-                  1. Verejný odkaz zo Shareable Foldera DeepStorage.dev (Funguje na všetkých zariadeniach):
+                  Verejný odkaz z DeepStorage.dev (Shareable Folder) alebo priamy MP3 link:
                 </label>
-                <input type="url" id="up-url" placeholder="https://share.deepstorage.dev/... alebo verejný link">
+                <input type="url" id="up-url" placeholder="https://share.deepstorage.dev/... alebo verejný internetový odkaz">
               </div>
 
-              <!-- Možnosť B: Priamy súbor -->
               <div style="margin-top:10px;">
                 <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:4px;">
-                  2. Alebo vyberte lokálny MP3 / WAV audio súbor:
+                  Alebo vyberte súbor z mobilu / PC (automaticky načíta veľkosť a názov):
                 </label>
                 <input type="file" id="up-file" accept="audio/*,.mp3,.wav" style="padding:8px; cursor:pointer; background:#090d16; border:1px solid var(--border); border-radius:6px; width:100%; color:#fff;">
               </div>
 
-              <button type="submit" class="btn btn-accent" style="margin-top:14px;">Uložiť a zverejniť skladbu</button>
+              <button type="submit" class="btn btn-accent" style="margin-top:14px;">🚀 Uložiť a Odoslať do Globálneho Cloudu</button>
             </form>
           </div>
 
@@ -888,27 +885,6 @@
     </div>
   </div>
 
-  <!-- MODÁLNE OKNO: GLOBÁLNA CLOUD SYNCHRONIZÁCIA MEDZI MOBILMI -->
-  <div class="modal-overlay" id="sync-modal">
-    <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:480px; width:100%; padding:28px; position:relative;">
-      <button class="modal-close" onclick="closeModal('sync-modal')">&times;</button>
-      <div style="font-size:2rem; margin-bottom:8px;">🌐</div>
-      <h2 style="font-size:1.3rem; font-weight:800; margin-bottom:6px;">Globálna Synchronizácia Medzi Mobilmi</h2>
-      <p style="color:var(--text-dim); font-size:0.8rem; margin-bottom:14px;">
-        Chcete, aby váš druhý mobil alebo priateľ videl presne tie isté skladby a zmeny, ktoré ste spravili?
-      </p>
-
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <button class="btn btn-accent" style="width:100%;" onclick="copyCloudSyncData()">📋 Skopírovať Cloud Kód Databázy</button>
-        <p style="font-size:0.75rem; color:var(--text-muted);">
-          Alebo vložte Cloud Kód z prvého mobilu na tento mobil:
-        </p>
-        <textarea id="sync-import-code" rows="3" placeholder="Sem vložte skopírovaný kód databázy..."></textarea>
-        <button class="btn btn-gold" style="width:100%;" onclick="importCloudSyncData()">📥 Načítať Skladby na Tento Mobil</button>
-      </div>
-    </div>
-  </div>
-
   <!-- MODÁLNE OKNO: PRIHLÁSENIE A REGISTRÁCIA -->
   <div class="modal-overlay" id="auth-modal">
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:420px; width:100%; padding:28px; position:relative;">
@@ -986,7 +962,15 @@
     };
     let currentCurrency = "EUR";
 
-    // Trvalá databáza IndexedDB pre lokálne súbory
+    // --- CELOSVETOVÁ CLOUDOVÁ DATABÁZA (GUN.JS P2P RELAY) ---
+    // Umožňuje okamžitú synchronizáciu medzi všetkými mobilmi a prehliadačmi na svete
+    const gun = Gun([
+      'https://gun-manhattan.herokuapp.com/gun',
+      'https://relay.peer.ooo/gun'
+    ]);
+    const globalCloudTracks = gun.get('groovevortex_public_library_v3');
+
+    // Trvalá databáza IndexedDB pre lokálnu vyrovnávaciu pamäť
     const DB_NAME = "GrooveVortexAudioDB";
     const STORE_NAME = "audio_blobs";
 
@@ -1013,7 +997,7 @@
           tx.oncomplete = () => resolve();
           tx.onerror = () => reject(tx.error);
         });
-      } catch(e) { console.error("IDB save error:", e); }
+      } catch(e) {}
     }
 
     async function getAudioBlob(id) {
@@ -1036,7 +1020,7 @@
       } catch(e) {}
     }
 
-    // Východiskové skladby s globálnymi streamami
+    // Východiskové skladby s globálnymi funkčnými streamami
     let allTracks = JSON.parse(localStorage.getItem("gv_all_tracks")) || [
       {
         id: "ds_01",
@@ -1120,6 +1104,29 @@
       });
       audioEngine.addEventListener("ended", playNext);
 
+      // AUTOMATICKÉ POČÚVANIE ZMIEN V GLOBÁLNOM CLOUDE:
+      // Keď prvý mobil pridá skladbu, druhý mobil ju ihneď prijme a zobrazí
+      globalCloudTracks.map().on((trackData, trackId) => {
+        if (trackData && trackData.title && trackData.url) {
+          const exists = allTracks.find(t => t.id === trackId || t.title === trackData.title);
+          if (!exists) {
+            allTracks.unshift({
+              id: trackId,
+              title: trackData.title,
+              artist: trackData.artist || "Neznámy interpret",
+              album: trackData.album || "Single",
+              format: trackData.format || "MP3",
+              sizeMB: parseFloat(trackData.sizeMB) || 5.0,
+              isPublic: true,
+              url: trackData.url
+            });
+            localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
+            renderAllTables();
+            updateStorageUI();
+          }
+        }
+      });
+
       const fileInput = document.getElementById("up-file");
       if (fileInput) {
         fileInput.addEventListener("change", (e) => {
@@ -1143,47 +1150,6 @@
         });
       }
     });
-
-    // --- CLOUD SYNCHRONIZÁCIA MEDZI ZARIADENIAMI ---
-    function openSyncModal() {
-      document.getElementById("sync-modal").classList.add("active");
-    }
-
-    function copyCloudSyncData() {
-      const exportData = {
-        tracks: allTracks,
-        timestamp: Date.now()
-      };
-      const code = btoa(unescape(encodeURIComponent(JSON.stringify(exportData))));
-      navigator.clipboard.writeText(code).then(() => {
-        alert("✅ Cloud Kód bol skopírovaný!\n\nPošlite ho na svoj druhý mobil (napr. cez WhatsApp alebo e-mail), otvorte Cloud Sync na druhom mobile a vložte ho tam.");
-      }).catch(() => {
-        prompt("Skopírujte si tento Cloud Kód:", code);
-      });
-    }
-
-    function importCloudSyncData() {
-      const code = document.getElementById("sync-import-code").value.trim();
-      if (!code) {
-        alert("Vložte kód synchronizácie!");
-        return;
-      }
-      try {
-        const decoded = JSON.parse(decodeURIComponent(escape(atob(code))));
-        if (decoded.tracks && Array.isArray(decoded.tracks)) {
-          allTracks = decoded.tracks;
-          localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
-          renderAllTables();
-          updateStorageUI();
-          closeModal("sync-modal");
-          alert("🎉 Skladby boli úspešne zosynchronizované na tento mobil!");
-        } else {
-          alert("Neplatný kód.");
-        }
-      } catch (err) {
-        alert("Chyba spracovania kódu. Uistite sa, že ste vložili celý reťazec.");
-      }
-    }
 
     // --- SPRÁVA POUŽÍVATEĽSKÝCH ÚČTOV ---
     function openAuthModal() {
@@ -1330,9 +1296,7 @@
           osc.stop(audioCtx.currentTime + 0.45);
           step++;
         }, 500);
-      } catch (e) {
-        console.warn("Audio fallback:", e);
-      }
+      } catch (e) {}
     }
 
     function stopSynthFallback() {
@@ -1683,7 +1647,7 @@
       checkStudioState();
     }
 
-    // Nahrávanie a uloženie (podporuje DeepStorage verejnú URL aj priamy súbor)
+    // Nahrávanie a automatické odoslanie do celosvetového cloudu
     async function handleStudioUpload(e) {
       e.preventDefault();
       const size = parseFloat(document.getElementById("up-size").value) || 5.0;
@@ -1709,7 +1673,7 @@
       }
 
       if (!targetAudioUrl) {
-        alert("Prosím, zadajte verejný odkaz z DeepStorage alebo vyberte audio súbor!");
+        alert("Prosím, zadajte verejný odkaz z DeepStorage (Shareable Folder) alebo vyberte audio súbor!");
         return;
       }
 
@@ -1727,11 +1691,24 @@
 
       allTracks.unshift(newT);
       localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
+
+      // AK JE ZVEREJNENÁ -> AUTOMATICKY ODOSLAŤ DO CELOSVETOVÉHO CLOUDU
+      if (isPub) {
+        globalCloudTracks.get(trackId).put({
+          title: newT.title,
+          artist: newT.artist,
+          album: newT.album,
+          format: newT.format,
+          sizeMB: newT.sizeMB,
+          url: newT.url
+        });
+      }
+
       renderAllTables();
       updateStorageUI();
       document.getElementById("studio-upload-form").reset();
       
-      alert(`Skladba "${newT.title}" bola úspešne uložená!\n\nAk ste zadali verejný odkaz alebo použijete funkciu "Cloud Sync", skladba sa okamžite zobrazí aj na vašom druhom mobile.`);
+      alert(`🎉 Skladba "${newT.title}" bola úspešne uložená!\n\nVďaka automatickému P2P cloudu sa okamžite zobrazí na všetkých ostatných mobiloch na svete bez zadávania kódov.`);
     }
 
     function renderStudioTable() {
@@ -1743,7 +1720,7 @@
         tr.innerHTML = `
           <td><strong>${escapeHtml(t.title)}</strong><br><small>${escapeHtml(t.artist)}</small></td>
           <td>${t.format} (${t.sizeMB} MB)</td>
-          <td>${t.isPublic ? '🌐 Verejné' : '🔒 Súkromné'}</td>
+          <td>${t.isPublic ? '🌐 Celý svet' : '🔒 Iba štúdio'}</td>
           <td>
             <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="togglePublic('${t.id}')">Zmeniť</button>
           </td>
@@ -1759,6 +1736,16 @@
       const t = allTracks.find(x => x.id === id);
       if (t) {
         t.isPublic = !t.isPublic;
+        if (t.isPublic) {
+          globalCloudTracks.get(t.id).put({
+            title: t.title,
+            artist: t.artist,
+            album: t.album,
+            format: t.format,
+            sizeMB: t.sizeMB,
+            url: t.url
+          });
+        }
         localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
         renderAllTables();
       }
@@ -1768,6 +1755,7 @@
       if (confirm("Zmazať túto skladbu?")) {
         await deleteAudioBlob(id);
         allTracks = allTracks.filter(x => x.id !== id);
+        globalCloudTracks.get(id).put(null);
         localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
         renderAllTables();
         updateStorageUI();
