@@ -1,0 +1,1408 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GrooveVortex Library | Full Platform & Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090e;
+      --surface: #0f1422;
+      --elevated: #161e31;
+      --card: rgba(22, 30, 49, 0.75);
+      --accent: #00f2fe;
+      --accent-glow: rgba(0, 242, 254, 0.35);
+      --trol-gold: #fbbf24;
+      --text: #f8fafc;
+      --text-dim: #94a3b8;
+      --text-muted: #64748b;
+      --border: rgba(255, 255, 255, 0.08);
+      --danger: #f43f5e;
+      --success: #10b981;
+      --sidebar-w: 260px;
+      --player-h: 90px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* Bočný panel */
+    aside {
+      width: var(--sidebar-w);
+      background-color: var(--surface);
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      z-index: 10;
+    }
+    .brand {
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .brand-icon {
+      width: 36px; height: 36px;
+      background: linear-gradient(135deg, var(--accent), #4facfe);
+      border-radius: 10px;
+      display: grid; place-items: center;
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+    .nav-list {
+      list-style: none;
+      padding: 16px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: var(--text-dim);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .nav-item:hover { color: #fff; background: rgba(255,255,255,0.04); }
+    .nav-item.active {
+      color: #fff;
+      background: linear-gradient(90deg, rgba(0, 242, 254, 0.15), transparent);
+      border-left: 3px solid var(--accent);
+    }
+
+    /* Hlavný kontajner */
+    main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - var(--player-h));
+      overflow-y: auto;
+      background: radial-gradient(circle at top right, rgba(0, 242, 254, 0.05), transparent 450px), var(--bg);
+    }
+
+    header {
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(12px);
+      background: rgba(11, 15, 25, 0.85);
+      position: sticky;
+      top: 0;
+      z-index: 5;
+    }
+    .search-box {
+      display: flex;
+      align-items: center;
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 30px;
+      padding: 8px 18px;
+      width: 320px;
+      gap: 10px;
+    }
+    .search-box input {
+      background: transparent;
+      border: none;
+      color: #fff;
+      font-size: 0.85rem;
+      width: 100%;
+      outline: none;
+    }
+
+    .top-controls { display: flex; align-items: center; gap: 12px; }
+    .currency-selector {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      color: var(--accent);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Časovač expirácie v hlavičke */
+    .sub-timer-badge {
+      background: rgba(251, 191, 36, 0.15);
+      border: 1px solid var(--trol-gold);
+      color: var(--trol-gold);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .content-area { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
+
+    /* Karty a tabuľky */
+    .section-title {
+      font-size: 1.3rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .grid-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 20px;
+    }
+    .track-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      position: relative;
+    }
+    .track-card:hover {
+      transform: translateY(-5px);
+      border-color: rgba(0, 242, 254, 0.4);
+      background: var(--elevated);
+    }
+    .track-cover {
+      width: 100%;
+      aspect-ratio: 1/1;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      background: #1e293b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      position: relative;
+    }
+    .badge {
+      font-size: 0.65rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+    .badge-mp3 { background: rgba(56, 189, 248, 0.15); color: #38bdf8; }
+    .badge-wav { background: rgba(16, 185, 129, 0.15); color: #10b981; }
+    .badge-locked { background: rgba(244, 63, 94, 0.2); color: #fca5a5; }
+
+    .table-container {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th {
+      padding: 12px 18px;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      background: rgba(15, 20, 32, 0.6);
+    }
+    td { padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+
+    /* Balíky & Cenník */
+    .holiday-banner {
+      background: linear-gradient(90deg, #ec4899, #f43f5e);
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-weight: 800;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 0 20px rgba(244, 63, 94, 0.5);
+    }
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(290px, 1fr));
+      gap: 24px;
+    }
+    .pricing-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 22px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    .pricing-card.featured {
+      border-color: var(--trol-gold);
+      box-shadow: 0 0 30px rgba(251, 191, 36, 0.15);
+      background: linear-gradient(180deg, rgba(251, 191, 36, 0.05), var(--card));
+    }
+    .cur-price { font-size: 2.2rem; font-weight: 800; color: #fff; margin: 8px 0; }
+    .features-list {
+      list-style: none;
+      margin: 18px 0;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      flex: 1;
+    }
+    .features-list li {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      line-height: 1.4;
+    }
+    .features-list li.paid-feature {
+      color: #fff;
+      font-weight: 600;
+    }
+    .features-list li.paid-feature::before {
+      content: "💎";
+    }
+    .features-list li.free-feature::before {
+      content: "✓";
+      color: var(--accent);
+      font-weight: bold;
+    }
+    .features-list li.locked-feature {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+    .features-list li.locked-feature::before {
+      content: "✕";
+      color: var(--danger);
+    }
+
+    /* Veľká platobná brána */
+    .checkout-modal-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 32px;
+      position: relative;
+      box-shadow: 0 25px 50px rgba(0,0,0,0.8);
+    }
+    .checkout-layout {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr;
+      gap: 28px;
+      margin-top: 20px;
+    }
+    .checkout-group-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 6px;
+    }
+    .field-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    .field-full { grid-column: span 2; }
+    label { font-size: 0.75rem; color: var(--text-dim); display: block; margin-bottom: 4px; }
+    input, select {
+      background: #090d16;
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 9px 12px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      width: 100%;
+      outline: none;
+    }
+    input:focus, select:focus { border-color: var(--accent); }
+
+    .order-summary-box {
+      background: var(--elevated);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+    }
+    .summary-total {
+      display: flex;
+      justify-content: space-between;
+      font-size: 1.2rem;
+      font-weight: 800;
+      color: #fff;
+      border-top: 1px solid var(--border);
+      padding-top: 12px;
+      margin-top: 6px;
+    }
+
+    /* Tlačidlá */
+    button, .btn {
+      padding: 10px 18px;
+      border-radius: 20px;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      border: none;
+      transition: 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      justify-content: center;
+    }
+    .btn-accent { background: var(--accent); color: #000; }
+    .btn-gold { background: linear-gradient(135deg, #f59e0b, #d97706); color: #000; font-weight: 800; }
+    .btn-outline { background: transparent; border: 1px solid var(--border); color: #fff; }
+    .btn-outline:hover { background: rgba(255,255,255,0.06); }
+    .btn-danger { background: var(--danger); color: #fff; }
+
+    /* Prehrávač */
+    .bottom-player {
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      height: var(--player-h);
+      background: rgba(11, 15, 25, 0.95);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: 280px 1fr 280px;
+      align-items: center;
+      padding: 0 24px;
+      z-index: 100;
+    }
+    .progress-range {
+      width: 100%;
+      height: 4px;
+      -webkit-appearance: none;
+      background: #1e293b;
+      border-radius: 2px;
+      cursor: pointer;
+    }
+    .progress-range::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--accent);
+    }
+
+    /* Modály */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(4, 7, 13, 0.88);
+      backdrop-filter: blur(10px);
+      display: none;
+      place-items: center;
+      z-index: 1000;
+      padding: 20px;
+    }
+    .modal-overlay.active { display: grid; }
+    .modal-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: none; border: none;
+      color: var(--text-dim);
+      font-size: 1.4rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Bočná navigácia -->
+  <aside>
+    <div class="brand">
+      <div class="brand-icon">⚡</div>
+      <span>GrooveVortex</span>
+    </div>
+    <ul class="nav-list">
+      <li class="nav-item active" onclick="switchTab('tab-discover')">
+        <span>🎧</span> Preskúmať & Trendy
+      </li>
+      <li class="nav-item" onclick="switchTab('tab-catalog')">
+        <span>📚</span> Verejný katalóg
+      </li>
+      <li class="nav-item" onclick="switchTab('tab-studio')">
+        <span>🔒</span> Súkromné Štúdio
+      </li>
+      <li class="nav-item" onclick="switchTab('tab-trol')">
+        <span>👑</span> TROL Upgrade & Cenník
+      </li>
+      <li class="nav-item" onclick="switchTab('tab-storage')">
+        <span>☁️</span> DeepStorage Kvóta
+      </li>
+    </ul>
+    <div style="padding: 16px; border-top: 1px solid var(--border);">
+      <div style="font-size: 0.72rem; color: var(--text-muted); margin-bottom: 4px;">STAV LICENCIE</div>
+      <div id="side-sub-status" style="font-size:0.8rem; color:var(--text-dim); font-weight:700;">Plán: Free</div>
+    </div>
+  </aside>
+
+  <!-- Hlavné okno -->
+  <main>
+    <header>
+      <div class="search-box">
+        <span>🔍</span>
+        <input type="text" placeholder="Hľadať skladbu, interpreta, formát..." oninput="handleSearch(this.value)">
+      </div>
+      <div class="top-controls">
+        <!-- Živý odpočet prémiového času -->
+        <div id="expiration-timer-pill" class="sub-timer-badge" style="display:none;">
+          <span>⏳</span> <span id="timer-countdown-text">Počítam...</span>
+        </div>
+
+        <select class="currency-selector" id="currency-select" onchange="changeCurrency(this.value)">
+          <option value="EUR">EUR (€)</option>
+          <option value="USD">USD ($)</option>
+          <option value="CZK">CZK (Kč)</option>
+        </select>
+        <button class="btn btn-gold" onclick="switchTab('tab-trol')">Kúpiť Členstvo</button>
+      </div>
+    </header>
+
+    <div class="content-area">
+
+      <!-- TAB 1: Preskúmať -->
+      <section id="tab-discover" class="tab-pane">
+        <div style="background: linear-gradient(135deg, rgba(0, 242, 254, 0.12), transparent); border:1px solid rgba(0, 242, 254, 0.2); border-radius:14px; padding:32px; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <h1 style="font-size:2rem; font-weight:800; margin-bottom:8px;">Streamovacia Sieť GrooveVortex</h1>
+            <p style="color:var(--text-dim); max-width:550px; font-size:0.9rem;">
+              Verejný stream hudby hostovanej na DeepStorage. Bezplatné počúvanie MP3 a platené WAV štúdiové balíky chránené predplatným.
+            </p>
+            <div style="margin-top:20px; display:flex; gap:10px;">
+              <button class="btn btn-accent" onclick="playRandomPublic()">Prehrať náhodný mix</button>
+              <button class="btn btn-outline" onclick="switchTab('tab-trol')">Preskúmať Balíky</button>
+            </div>
+          </div>
+          <div style="font-size:5rem;">🎛️</div>
+        </div>
+
+        <div style="margin-top:32px;">
+          <div class="section-title"><span>🔥 Trendy vydané skladby</span></div>
+          <div class="grid-cards" id="trending-grid"></div>
+        </div>
+      </section>
+
+      <!-- TAB 2: Verejný katalóg -->
+      <section id="tab-catalog" class="tab-pane" style="display:none;">
+        <div class="section-title">
+          <span>Katalóg skladieb (DeepStorage)</span>
+          <span style="font-size:0.8rem; color:var(--text-dim);" id="public-count-label">0 skladieb</span>
+        </div>
+        <div class="table-container">
+          <table>
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Skladba & Interpret</th>
+                <th>Album</th>
+                <th>Formát</th>
+                <th>Veľkosť</th>
+                <th>Prístup</th>
+                <th>Akcie</th>
+              </tr>
+            </thead>
+            <tbody id="public-table-body"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- TAB 3: Súkromné štúdio -->
+      <section id="tab-studio" class="tab-pane" style="display:none;">
+        <div id="studio-locked-screen" style="max-width:480px; margin:40px auto; text-align:center; background:var(--surface); padding:32px; border-radius:16px; border:1px solid var(--border);">
+          <div style="font-size:3rem; margin-bottom:12px;">🔐</div>
+          <h2>Súkromné Štúdio Producenta</h2>
+          <p style="color:var(--text-dim); font-size:0.85rem; margin:10px 0 20px;">
+            Zadajte administrátorské heslo pre vstup do nahrávacieho štúdia.
+          </p>
+          <form onsubmit="handleStudioUnlock(event)">
+            <input type="password" id="studio-pass-input" placeholder="Zadajte heslo..." required style="margin-bottom:12px; text-align:center;">
+            <button type="submit" class="btn btn-accent" style="width:100%;">Odomknúť</button>
+          </form>
+          <p style="color:var(--text-muted); font-size:0.75rem; margin-top:14px;">Heslo: <code>vortex2026</code></p>
+        </div>
+
+        <div id="studio-unlocked-screen" style="display:none;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2>🎚️ Nahrávanie do DeepStorage & Správa Viditeľnosti</h2>
+            <button class="btn btn-outline" onclick="lockStudio()">🔒 Uzamknúť</button>
+          </div>
+
+          <div style="background:var(--elevated); padding:24px; border-radius:12px; margin-bottom:24px; border:1px solid var(--border);">
+            <h3>Nahrať novú skladbu</h3>
+            <form onsubmit="handleStudioUpload(event)" style="margin-top:14px;">
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
+                <input type="text" id="up-title" placeholder="Názov skladby *" required>
+                <input type="text" id="up-artist" placeholder="Interpret *" required>
+                <input type="text" id="up-album" placeholder="Album *" required>
+                <select id="up-format">
+                  <option value="MP3">MP3 (Stream)</option>
+                  <option value="WAV">WAV (Platený Master)</option>
+                </select>
+                <input type="number" id="up-size" step="0.1" placeholder="Veľkosť v MB *" required>
+                <select id="up-visibility">
+                  <option value="private">🔒 Súkromné (Iba v štúdiu)</option>
+                  <option value="public">🌐 Zverejniť verejne</option>
+                </select>
+              </div>
+              <input type="url" id="up-url" placeholder="DeepStorage Verejný odkaz (https://share.deepstorage.dev/...)" required style="margin-top:10px;">
+              <button type="submit" class="btn btn-accent" style="margin-top:12px;">Uložiť do štúdia</button>
+            </form>
+          </div>
+
+          <div class="table-container">
+            <table>
+              <thead>
+                <tr>
+                  <th>Skladba</th>
+                  <th>Formát</th>
+                  <th>Stav</th>
+                  <th>Prepnúť</th>
+                  <th>Zmazať</th>
+                </tr>
+              </thead>
+              <tbody id="studio-table-body"></tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 4: Presný popis balíkov a cenník -->
+      <section id="tab-trol" class="tab-pane" style="display:none;">
+        <div style="text-align:center; max-width:700px; margin:0 auto 20px;">
+          <div id="dynamic-cycle-badge" style="display:inline-block; padding:4px 12px; border-radius:20px; font-size:0.8rem; font-weight:700; margin-bottom:10px;">--</div>
+          <h1 style="font-size:2.2rem; font-weight:800; margin-bottom:8px;">Čo presne balíky obsahujú</h1>
+          <p style="color:var(--text-dim); font-size:0.85rem;">
+            Vyberte si úroveň prístupu. Položky označené 💎 sú striktne platené – pri vypršaní predplatného systém automaticky zablokuje prístup k WAV súborom a zmaže prémiový status z databázy.
+          </p>
+        </div>
+
+        <div id="holiday-banner-area"></div>
+
+        <div class="pricing-grid">
+          <!-- 1. Skúšobná verzia (7 Dní) -->
+          <div class="pricing-card">
+            <h3>7-Dňový Free Trial</h3>
+            <p style="color:var(--text-dim); font-size:0.8rem;">Bezplatná skúška funkcií na 7 dní</p>
+            <div class="cur-price">0 <span class="cur-symbol-span">€</span></div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">Expirácia po 7 dňoch</p>
+            <ul class="features-list">
+              <li class="free-feature">Neobmedzený MP3 streaming (320 kbps)</li>
+              <li class="free-feature">Prehľadávanie celej knižnice</li>
+              <li class="paid-feature">Maximálne 3 stiahnutia WAV Masterov</li>
+              <li class="locked-feature">Komerčná streamovacia synchronizácia</li>
+              <li class="locked-feature">Prioritné DeepStorage zrkadlá</li>
+            </ul>
+            <button class="btn btn-outline" onclick="openCheckout('trial', '7-Dňový Skúšobný Trial', 0, 7)">Aktivovať 7 Dní Skúšky</button>
+          </div>
+
+          <!-- 2. Mesačný TROL -->
+          <div class="pricing-card featured">
+            <span style="position:absolute; top:-10px; right:16px; background:var(--trol-gold); color:#000; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:10px;">NAJPREDÁVANEJŠIE</span>
+            <h3>TROL Mesačne (30 Dní)</h3>
+            <p style="color:var(--text-dim); font-size:0.8rem;">Pre aktívnych tvorcov a DJs</p>
+            <div>
+              <span id="monthly-old-price" style="text-decoration:line-through; color:var(--text-muted); font-size:0.9rem;"></span>
+              <div class="cur-price" id="monthly-price-display">--</div>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">Platnosť presne 30 dní od úhrady</p>
+            <ul class="features-list">
+              <li class="paid-feature">Neobmedzené sťahovanie WAV Masterov (24-bit)</li>
+              <li class="paid-feature">Plná komerčná streamovacia licencia (PDF certifikát)</li>
+              <li class="paid-feature">Prioritná šírka pásma zo Shareable Foldera</li>
+              <li class="paid-feature">VIP podpora a prístup k nevydaným demám</li>
+              <li class="free-feature">Čistý zvuk bez reklamných jinglov</li>
+            </ul>
+            <button class="btn btn-gold" id="btn-buy-monthly" onclick="triggerMonthlyCheckout()">Kúpiť Mesačný TROL</button>
+          </div>
+
+          <!-- 3. Ročný TROL -->
+          <div class="pricing-card">
+            <span style="position:absolute; top:-10px; right:16px; background:var(--accent); color:#000; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:10px;">ZĽAVA ROKA</span>
+            <h3>TROL Ročne (365 Dní)</h3>
+            <p style="color:var(--text-dim); font-size:0.8rem;">Pre hudobné vydavateľstvá a štúdiá</p>
+            <div>
+              <span id="annual-old-price" style="text-decoration:line-through; color:var(--text-muted); font-size:0.9rem;"></span>
+              <div class="cur-price" id="annual-price-display">--</div>
+            </div>
+            <p style="font-size:0.75rem; color:var(--text-muted); margin-bottom:10px;">Platnosť 365 dní od úhrady</p>
+            <ul class="features-list">
+              <li class="paid-feature">Všetko z Mesačného plánu na celý rok</li>
+              <li class="paid-feature">Licencia pre neobmedzené komerčné projekty & YouTube</li>
+              <li class="paid-feature">Priamy prístup k štúdiovým stopám (Stem Packy)</li>
+              <li class="paid-feature">0% provízia pri predaji vašich beatov cez platformu</li>
+              <li class="paid-feature">Zlatý odznak overeného producenta</li>
+            </ul>
+            <button class="btn btn-accent" id="btn-buy-annual" onclick="triggerAnnualCheckout()">Kúpiť Ročný TROL</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- TAB 5: DeepStorage Kvóta -->
+      <section id="tab-storage" class="tab-pane" style="display:none;">
+        <div style="background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:24px;">
+          <h2>Kapacita úložiska DeepStorage.dev</h2>
+          <p style="color:var(--text-dim); font-size:0.85rem; margin-top:4px;">
+            Mesačný limit nahrávania na bezplatnom pláne: <strong>50 000 MB (50 GB)</strong>.
+          </p>
+          <div style="height:12px; background:#1e293b; border-radius:6px; overflow:hidden; margin:14px 0;">
+            <div id="storage-fill-bar" style="height:100%; width:0%; background:linear-gradient(90deg, var(--accent), #4facfe); transition: width 0.4s;"></div>
+          </div>
+          <div style="display:flex; justify-content:space-between; font-size:0.85rem;">
+            <span id="storage-used-txt">Využité: 0 MB</span>
+            <span id="storage-percent-txt">0 %</span>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Spodný sticky prehrávač -->
+  <div class="bottom-player">
+    <div style="display:flex; align-items:center; gap:12px;">
+      <div style="width:48px; height:48px; border-radius:6px; background:#1e293b; display:grid; place-items:center; font-size:1.5rem;" id="player-art">🎵</div>
+      <div>
+        <h5 id="player-title" style="font-size:0.85rem; max-width:180px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">Žiadna skladba</h5>
+        <p id="player-artist" style="font-size:0.75rem; color:var(--text-dim);">GrooveVortex Library</p>
+      </div>
+    </div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:6px;">
+      <div style="display:flex; gap:16px; align-items:center;">
+        <button onclick="playPrev()" style="background:none; border:none; color:var(--text-dim); font-size:1.1rem; cursor:pointer;">⏮</button>
+        <button id="main-play-btn" onclick="togglePlay()" style="width:36px; height:36px; border-radius:50%; background:#fff; color:#000; border:none; font-weight:bold; cursor:pointer;">▶</button>
+        <button onclick="playNext()" style="background:none; border:none; color:var(--text-dim); font-size:1.1rem; cursor:pointer;">⏭</button>
+      </div>
+      <input type="range" id="seek-bar" class="progress-range" min="0" max="100" value="0" oninput="handleSeek(this.value)" style="width:380px;">
+    </div>
+    <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px;">
+      <span style="font-size:0.8rem;">🔊</span>
+      <input type="range" class="progress-range" min="0" max="1" step="0.05" value="0.8" style="width:70px;" oninput="audioEngine.volume = this.value">
+    </div>
+  </div>
+
+  <audio id="audio-engine" preload="none"></audio>
+
+  <!-- VEĽKÁ PLATOBNÁ BRÁNA S MNOHÝMI POLÍČKAMI -->
+  <div class="modal-overlay" id="checkout-modal">
+    <div class="checkout-modal-card">
+      <button class="modal-close" onclick="closeModal('checkout-modal')">&times;</button>
+      <div style="display:flex; align-items:center; gap:10px; margin-bottom:4px;">
+        <span style="font-size:1.5rem;">💳</span>
+        <h2 style="font-size:1.4rem; font-weight:800;">Zabezpečená Platobná Brána GrooveVortex</h2>
+      </div>
+      <p style="color:var(--text-dim); font-size:0.8rem;">
+        Šifrované 256-bitové SSL spojenie. Prémiový balík bude aktivovaný okamžite po overení.
+      </p>
+
+      <form id="full-checkout-form" onsubmit="processFullCheckout(event)">
+        <div class="checkout-layout">
+          
+          <!-- Ľavý stĺpec: Fakturačné údaje -->
+          <div>
+            <div class="checkout-group-title">1. Fakturačné Údaje Zákazníka</div>
+            <div class="field-grid">
+              <div>
+                <label>Meno *</label>
+                <input type="text" id="bill-fname" placeholder="Janko" required>
+              </div>
+              <div>
+                <label>Priezvisko *</label>
+                <input type="text" id="bill-lname" placeholder="Hraško" required>
+              </div>
+              <div class="field-full">
+                <label>E-mailová adresa (pre doručenie licencie) *</label>
+                <input type="email" id="bill-email" placeholder="janko@example.com" required>
+              </div>
+              <div class="field-full">
+                <label>Ulica a číslo domu *</label>
+                <input type="text" id="bill-address" placeholder="Hlavná 123/45" required>
+              </div>
+              <div>
+                <label>Mesto *</label>
+                <input type="text" id="bill-city" placeholder="Bratislava" required>
+              </div>
+              <div>
+                <label>PSČ *</label>
+                <input type="text" id="bill-zip" placeholder="811 01" required>
+              </div>
+              <div class="field-full">
+                <label>Štát / Krajina *</label>
+                <select id="bill-country">
+                  <option value="SK">Slovenská republika</option>
+                  <option value="CZ">Česká republika</option>
+                  <option value="US">Spojené štáty (USA)</option>
+                  <option value="DE">Nemecko</option>
+                  <option value="OTHER">Iný štát</option>
+                </select>
+              </div>
+              <div class="field-full">
+                <label>IČ DPH / DIČ (Voliteľné pre firmy)</label>
+                <input type="text" id="bill-vat" placeholder="SK2020123456">
+              </div>
+            </div>
+
+            <div class="checkout-group-title" style="margin-top:16px;">2. Spôsob Platby</div>
+            <div style="display:flex; gap:10px; margin-bottom:12px;">
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="pay-method" checked style="width:auto;"> Platobná Karta
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="pay-method" style="width:auto;"> PayPal Express
+              </label>
+              <label style="display:flex; align-items:center; gap:6px; cursor:pointer;">
+                <input type="radio" name="pay-method" style="width:auto;"> Krypto (USDT)
+              </label>
+            </div>
+            <div class="field-grid">
+              <div class="field-full">
+                <label>Meno na platobnej karte *</label>
+                <input type="text" id="card-name" placeholder="JANKO HRASKO" required>
+              </div>
+              <div class="field-full">
+                <label>Číslo karty (16 číslic) *</label>
+                <input type="text" id="card-num" maxlength="19" placeholder="4242 •••• •••• 4242" oninput="formatCardNumber(this)" required>
+              </div>
+              <div>
+                <label>Expirácia (MM/RR) *</label>
+                <input type="text" id="card-exp" maxlength="5" placeholder="12/28" required>
+              </div>
+              <div>
+                <label>Bezpečnostný kód (CVC/CVV) *</label>
+                <input type="password" id="card-cvc" maxlength="4" placeholder="•••" required>
+              </div>
+            </div>
+          </div>
+
+          <!-- Pravý stĺpec: Rekapitulácia a Platba -->
+          <div>
+            <div class="checkout-group-title">3. Rekapitulácia Objednávky</div>
+            <div class="order-summary-box">
+              <div class="summary-line">
+                <span>Zvolený balík:</span>
+                <strong id="summary-pack-name" style="color:#fff;">--</strong>
+              </div>
+              <div class="summary-line">
+                <span>Doba platnosti:</span>
+                <span id="summary-pack-duration" style="color:var(--accent);">--</span>
+              </div>
+              <div class="summary-line">
+                <span>Základná cena:</span>
+                <span id="summary-subtotal">0.00</span>
+              </div>
+              <div class="summary-line">
+                <span>Sviatočná / Promo zľava:</span>
+                <span id="summary-discount" style="color:var(--danger);">- 0.00</span>
+              </div>
+              <div class="summary-line">
+                <span>DPH (20%):</span>
+                <span id="summary-tax">0.00</span>
+              </div>
+              <div class="summary-total">
+                <span>Spolu k úhrade:</span>
+                <span id="summary-grand-total" style="color:var(--trol-gold);">0.00 €</span>
+              </div>
+
+              <div style="font-size:0.75rem; color:var(--text-muted); line-height:1.4; margin-top:10px;">
+                * Upozornenie k databáze: Po uplynutí zakúpenej doby systém automaticky vymaže prémiový účet a vyžaduje opätovný nákup.
+              </div>
+
+              <div style="margin-top:10px;">
+                <label style="display:flex; align-items:flex-start; gap:8px; font-size:0.75rem; color:var(--text-dim); cursor:pointer;">
+                  <input type="checkbox" required style="width:auto; margin-top:2px;">
+                  Súhlasím so všeobecnými obchodnými podmienkami a podmienkami licencie DeepStorage.
+                </label>
+              </div>
+
+              <button type="submit" id="btn-process-checkout" class="btn btn-gold" style="width:100%; padding:14px; margin-top:10px; font-size:1rem;">
+                🔒 Autorizovať a Zaplatiť
+              </button>
+            </div>
+          </div>
+
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODÁLNE OKNO: VYSKAKOVACIA PONUKA PRI KAŽDOM PRIPOJENÍ -->
+  <div class="modal-overlay" id="connection-offer-modal">
+    <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:440px; width:100%; padding:28px; text-align:center; position:relative;">
+      <button class="modal-close" onclick="closeModal('connection-offer-modal')">&times;</button>
+      <div style="font-size:2.8rem; margin-bottom:8px;">👑</div>
+      <h2 style="font-size:1.35rem; font-weight:800; margin-bottom:4px;">Vitajte v GrooveVortex!</h2>
+      <p style="color:var(--text-dim); font-size:0.85rem; margin-bottom:14px;">
+        Získajte prístup k neobmedzeným WAV štúdiovým masterom a komerčnej licencii.
+      </p>
+      <div id="modal-offer-pricing-box" style="background:var(--elevated); padding:14px; border-radius:10px; margin-bottom:16px; border:1px solid var(--border);"></div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <button class="btn btn-gold" style="width:100%;" onclick="acceptModalOffer()">Využiť ponuku & Otvoriť bránu</button>
+        <button class="btn btn-outline" style="width:100%;" onclick="closeModal('connection-offer-modal')">Možno neskôr zakúpim</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const DEEPSTORAGE_LIMIT_MB = 50000;
+    const STUDIO_HASH = "e36e6c86a117565780eb7c7f394c86716bcfa58c40ff5eeef4ef55e8c3b7a8fa"; // "vortex2026"
+
+    const CURRENCIES = {
+      EUR: { symbol: "€", rate: 1.0 },
+      USD: { symbol: "$", rate: 1.08 },
+      CZK: { symbol: "Kč", rate: 25.2 }
+    };
+    let currentCurrency = "EUR";
+
+    // Základné skladby
+    let allTracks = JSON.parse(localStorage.getItem("gv_all_tracks")) || [
+      {
+        id: "ds_01",
+        title: "Cyberpunk Horizon",
+        artist: "Vortex Wave",
+        album: "Synth City 2026",
+        format: "MP3",
+        sizeMB: 9.8,
+        isPublic: true,
+        url: "https://share.deepstorage.dev/sample/cyber_horizon.mp3"
+      },
+      {
+        id: "ds_02",
+        title: "Subsonic Wave Master (24-bit)",
+        artist: "Bass Architect",
+        album: "Low End Theory",
+        format: "WAV",
+        sizeMB: 48.2,
+        isPublic: true,
+        url: "https://share.deepstorage.dev/sample/subsonic_master.wav"
+      },
+      {
+        id: "ds_priv_demo",
+        title: "Nevydané Štúdiové Demo #9",
+        artist: "Producer VIP",
+        album: "Studio Vault",
+        format: "WAV",
+        sizeMB: 51.0,
+        isPublic: false,
+        url: "https://share.deepstorage.dev/private/demo9.wav"
+      }
+    ];
+
+    // Stav predplatného v databáze (localStorage)
+    let userSubscription = JSON.parse(localStorage.getItem("gv_user_subscription")) || {
+      plan: "free",
+      name: "Free",
+      expiresAt: null
+    };
+
+    let isStudioUnlocked = sessionStorage.getItem("gv_studio_unlocked") === "true";
+    let activeCheckoutPlan = null;
+    const audioEngine = document.getElementById("audio-engine");
+
+    // Štart aplikácie
+    window.addEventListener("load", () => {
+      calculateAndRenderPricing();
+      renderAllTables();
+      updateStorageUI();
+      checkStudioState();
+      
+      // Spustenie overovacieho enginu expirácie každú sekundu
+      checkSubscriptionExpiration();
+      setInterval(checkSubscriptionExpiration, 1000);
+
+      // Zobraziť ponuku pri každom pripojení
+      setTimeout(() => {
+        document.getElementById("connection-offer-modal").classList.add("active");
+      }, 700);
+
+      // Poslucháče prehrávača
+      audioEngine.addEventListener("timeupdate", () => {
+        if (!isNaN(audioEngine.duration)) {
+          document.getElementById("seek-bar").value = (audioEngine.currentTime / audioEngine.duration) * 100 || 0;
+        }
+      });
+      audioEngine.addEventListener("ended", playNext);
+    });
+
+    // --- ENGINE KONTROLY EXPIRÁCIE A ODSTRÁNENIA Z DATABÁZY ---
+    function checkSubscriptionExpiration() {
+      const timerPill = document.getElementById("expiration-timer-pill");
+      const countdownTxt = document.getElementById("timer-countdown-text");
+      const sideStatus = document.getElementById("side-sub-status");
+
+      if (!userSubscription || userSubscription.plan === "free" || !userSubscription.expiresAt) {
+        timerPill.style.display = "none";
+        sideStatus.textContent = "Plán: Bezplatný (Free)";
+        sideStatus.style.color = "var(--text-dim)";
+        return;
+      }
+
+      const now = Date.now();
+      const expiry = parseInt(userSubscription.expiresAt);
+      const remaining = expiry - now;
+
+      // AK ČAS VYPRŠAL -> AUTOMATICKY VYMAZAŤ PRÉMIUM Z DATABÁZY
+      if (remaining <= 0) {
+        // Zmazať prémium a uložiť bezplatný plán
+        userSubscription = { plan: "free", name: "Free", expiresAt: null };
+        localStorage.setItem("gv_user_subscription", JSON.stringify(userSubscription));
+        
+        timerPill.style.display = "none";
+        sideStatus.textContent = "Plán: Bezplatný (Free)";
+        renderAllTables();
+
+        // Upozornenie pre používateľa
+        alert("⚠️ VAŠE PREDPLATNÉ VYPRŠALO!\n\nSystém automaticky vymazal prémiový status z databázy. Prístup k sťahovaniu WAV Masterov a plateným výhodám bol zablokovaný. Pre obnovenie prístupu si musíte zakúpiť nový balík.");
+        switchTab("tab-trol");
+        return;
+      }
+
+      // Ak je stále platné -> zobrazovať živý odpočet
+      timerPill.style.display = "flex";
+      sideStatus.textContent = `Plán: ${userSubscription.name}`;
+      sideStatus.style.color = "var(--trol-gold)";
+
+      const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((remaining / (1000 * 60)) % 60);
+      const seconds = Math.floor((remaining / 1000) % 60);
+
+      countdownTxt.textContent = `${userSubscription.name}: Zostáva ${days}d ${hours}h ${minutes}m ${seconds}s`;
+    }
+
+    // --- DYNAMICKÝ CENOVÝ ALGORITMUS (2 Mesiace + Kalendár Sviatkov) ---
+    function getDynamicPricing() {
+      const now = new Date();
+      const month = now.getMonth();
+      const day = now.getDate();
+
+      // 2-mesačný cyklus
+      const isHighCycle = (Math.floor(month / 2) % 2 === 1);
+      let baseMonthlyEUR = isHighCycle ? 8.99 : 5.99;
+      let baseAnnualEUR = isHighCycle ? 69.99 : 49.99;
+
+      // Kalendár sviatkov
+      let activeHoliday = null;
+      if (month === 0 && day <= 6) activeHoliday = "Novoročný Sviatok";
+      else if (month === 1 && day >= 10 && day <= 16) activeHoliday = "Valentínska Zľava";
+      else if ((month === 2 || month === 3) && day >= 25 && day <= 5) activeHoliday = "Veľkonočná Akcia";
+      else if (month === 6 || month === 7) activeHoliday = "Letné Prázdniny";
+      else if (month === 9 && day >= 25) activeHoliday = "Halloween & Pamiatka Zosnulých";
+      else if (month === 10 && day >= 20) activeHoliday = "Black Friday";
+      else if (month === 11 && day >= 18) activeHoliday = "Vianočné Sviatky";
+
+      const discountFactor = activeHoliday ? 0.6 : 1.0; // 40 % zľava pri sviatku
+
+      return {
+        isHighCycle,
+        activeHoliday,
+        monthlyEUR: baseMonthlyEUR * discountFactor,
+        annualEUR: baseAnnualEUR * discountFactor,
+        origMonthlyEUR: baseMonthlyEUR,
+        origAnnualEUR: baseAnnualEUR
+      };
+    }
+
+    function calculateAndRenderPricing() {
+      const p = getDynamicPricing();
+      const cur = CURRENCIES[currentCurrency];
+
+      const badge = document.getElementById("dynamic-cycle-badge");
+      badge.style.background = p.isHighCycle ? "rgba(244, 63, 94, 0.2)" : "rgba(16, 185, 129, 0.2)";
+      badge.style.color = p.isHighCycle ? "#fca5a5" : "#6ee7b7";
+      badge.textContent = p.isHighCycle ? "📈 2-Mesačný Cyklus: Sezónna Špička" : "📉 2-Mesačný Cyklus: Zvýhodnené Obdobie";
+
+      const bannerArea = document.getElementById("holiday-banner-area");
+      bannerArea.innerHTML = p.activeHoliday ? 
+        `<div class="holiday-banner">🎉 SVIATOČNÁ AKCIA: ${p.activeHoliday.toUpperCase()} (-40% ZĽAVA NA VŠETKO!)</div>` : "";
+
+      const mPrice = (p.monthlyEUR * cur.rate).toFixed(2);
+      const aPrice = (p.annualEUR * cur.rate).toFixed(2);
+
+      document.getElementById("monthly-price-display").textContent = `${mPrice} ${cur.symbol} / mes.`;
+      document.getElementById("annual-price-display").textContent = `${aPrice} ${cur.symbol} / rok`;
+
+      document.querySelectorAll(".cur-symbol-span").forEach(s => s.textContent = cur.symbol);
+
+      if (p.activeHoliday) {
+        document.getElementById("monthly-old-price").textContent = `${(p.origMonthlyEUR * cur.rate).toFixed(2)} ${cur.symbol}`;
+        document.getElementById("annual-old-price").textContent = `${(p.origAnnualEUR * cur.rate).toFixed(2)} ${cur.symbol}`;
+      }
+
+      document.getElementById("modal-offer-pricing-box").innerHTML = `
+        <div style="font-size:0.8rem; color:var(--accent); font-weight:700;">AKTUÁLNA CENA ČLENSTVA</div>
+        <div style="font-size:1.6rem; font-weight:800; color:#fff;">${mPrice} ${cur.symbol} <span style="font-size:0.8rem; font-weight:400; color:var(--text-dim);">/ 30 dní</span></div>
+      `;
+    }
+
+    function changeCurrency(c) {
+      currentCurrency = c;
+      calculateAndRenderPricing();
+    }
+
+    // --- OTVORENIE VEĽKEJ PLATOBNEJ BRÁNY ---
+    function triggerMonthlyCheckout() {
+      const p = getDynamicPricing();
+      openCheckout('monthly', 'TROL Mesačne (30 Dní)', p.monthlyEUR, 30);
+    }
+
+    function triggerAnnualCheckout() {
+      const p = getDynamicPricing();
+      openCheckout('annual', 'TROL Ročne (365 Dní)', p.annualEUR, 365);
+    }
+
+    function openCheckout(planKey, planName, priceEUR, durationDays) {
+      const cur = CURRENCIES[currentCurrency];
+      const convertedPrice = (priceEUR * cur.rate);
+
+      activeCheckoutPlan = {
+        key: planKey,
+        name: planName,
+        price: convertedPrice,
+        days: durationDays
+      };
+
+      document.getElementById("summary-pack-name").textContent = planName;
+      document.getElementById("summary-pack-duration").textContent = `${durationDays} kalendárnych dní`;
+      
+      const subtotal = (convertedPrice / 1.2).toFixed(2);
+      const tax = (convertedPrice - subtotal).toFixed(2);
+
+      document.getElementById("summary-subtotal").textContent = `${subtotal} ${cur.symbol}`;
+      document.getElementById("summary-discount").textContent = `- 0.00 ${cur.symbol}`;
+      document.getElementById("summary-tax").textContent = `${tax} ${cur.symbol}`;
+      document.getElementById("summary-grand-total").textContent = `${convertedPrice.toFixed(2)} ${cur.symbol}`;
+
+      document.getElementById("checkout-modal").classList.add("active");
+    }
+
+    function formatCardNumber(input) {
+      let v = input.value.replace(/\D/g, '').substring(0, 16);
+      let matches = v.match(/\d{4,16}/g);
+      let match = matches && matches[0] || '';
+      let parts = [];
+      for (let i = 0; i < match.length; i += 4) {
+        parts.push(match.substring(i, i + 4));
+      }
+      input.value = parts.length ? parts.join(' ') : v;
+    }
+
+    function processFullCheckout(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-process-checkout");
+      btn.disabled = true;
+      btn.textContent = "⏳ Autorizujem platbu a overujem 3D Secure...";
+
+      setTimeout(() => {
+        // Vypočítať presný čas expirácie
+        const now = Date.now();
+        const expiryTimestamp = now + (activeCheckoutPlan.days * 24 * 60 * 60 * 1000);
+
+        // ULOŽIŤ DO DATABÁZY (localStorage)
+        userSubscription = {
+          plan: activeCheckoutPlan.key,
+          name: activeCheckoutPlan.name,
+          expiresAt: expiryTimestamp,
+          userEmail: document.getElementById("bill-email").value,
+          activatedAt: new Date().toISOString()
+        };
+        localStorage.setItem("gv_user_subscription", JSON.stringify(userSubscription));
+
+        btn.disabled = false;
+        btn.textContent = "🔒 Autorizovať a Zaplatiť";
+        closeModal("checkout-modal");
+
+        renderAllTables();
+        checkSubscriptionExpiration();
+
+        alert(`✅ PLATBA BOLA ÚSPEŠNÁ!\n\nVáš plán "${activeCheckoutPlan.name}" bol aktivovaný na ${activeCheckoutPlan.days} dní.\n\nSťahovanie WAV súborov je odomknuté.`);
+      }, 1400);
+    }
+
+    // --- OCHRANA PLATENÉHO OBSAHU ---
+    function handleTrackAction(trackId, format) {
+      const track = allTracks.find(t => t.id === trackId);
+      if (!track) return;
+
+      // Ak ide o MP3 -> voľné prehratie
+      if (format === "MP3") {
+        playAudio(track.url, track.title, track.artist);
+        return;
+      }
+
+      // Ak ide o WAV Master -> STRIKTNE KONTROLOVAŤ ČLENSTVO V DATABÁZE
+      if (format === "WAV") {
+        if (!userSubscription || userSubscription.plan === "free" || !userSubscription.expiresAt) {
+          alert("🔒 CHRÁNENÝ OBSAH:\n\nTento súbor je nekomprimovaný štúdiový WAV Master. Je prístupný výhradne pre členov s aktívnym balíkom TROL.\n\nProsím, aktivujte si členstvo v sekcii Cenník.");
+          switchTab("tab-trol");
+          return;
+        }
+
+        // Ak je predplatné aktívne -> povoliť stiahnutie z DeepStorage
+        alert(`💎 LICENCIA OVERENÁ:\n\nSťahujem štúdiový súbor "${track.title}" z úložiska DeepStorage.dev`);
+        window.open(track.url, "_blank");
+      }
+    }
+
+    // --- TABUĽKY A ŠTÚDIO ---
+    function renderAllTables() {
+      renderPublicCatalog();
+      renderTrendingGrid();
+      if (isStudioUnlocked) renderStudioTable();
+    }
+
+    function renderPublicCatalog(filter = "") {
+      const tbody = document.getElementById("public-table-body");
+      tbody.innerHTML = "";
+
+      const publicList = allTracks.filter(t => t.isPublic && (
+        t.title.toLowerCase().includes(filter.toLowerCase()) ||
+        t.artist.toLowerCase().includes(filter.toLowerCase())
+      ));
+
+      document.getElementById("public-count-label").textContent = `${publicList.length} verejných skladieb`;
+
+      publicList.forEach((t, i) => {
+        const isWav = t.format === "WAV";
+        const hasAccess = userSubscription && userSubscription.plan !== "free";
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i + 1}</td>
+          <td><strong>${escapeHtml(t.title)}</strong><br><small style="color:var(--text-dim)">${escapeHtml(t.artist)}</small></td>
+          <td>${escapeHtml(t.album)}</td>
+          <td><span class="badge ${isWav ? 'badge-wav' : 'badge-mp3'}">${t.format}</span></td>
+          <td>${t.sizeMB} MB</td>
+          <td>
+            ${isWav ? (hasAccess ? '<span style="color:var(--success); font-size:0.75rem;">💎 Plné Členstvo</span>' : '<span class="badge badge-locked">🔒 Platený WAV</span>') : '<span style="color:var(--accent); font-size:0.75rem;">✓ Voľný Stream</span>'}
+          </td>
+          <td>
+            <button class="btn btn-accent" style="padding:4px 10px; font-size:0.75rem;" onclick="playAudio('${t.url}', '${escapeHtml(t.title)}', '${escapeHtml(t.artist)}')">▶ Prehrať</button>
+            <button class="btn btn-outline" style="padding:4px 10px; font-size:0.75rem;" onclick="handleTrackAction('${t.id}', '${t.format}')">
+              ${isWav ? 'Stiahnuť WAV 💎' : 'Stiahnuť'}
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function renderTrendingGrid() {
+      const grid = document.getElementById("trending-grid");
+      grid.innerHTML = "";
+      allTracks.filter(t => t.isPublic).slice(0, 4).forEach(t => {
+        const card = document.createElement("div");
+        card.className = "track-card";
+        card.onclick = () => playAudio(t.url, t.title, t.artist);
+        card.innerHTML = `
+          <div class="track-cover">🎵</div>
+          <h4 style="font-size:0.9rem; font-weight:700;">${escapeHtml(t.title)}</h4>
+          <p style="font-size:0.75rem; color:var(--text-dim);">${escapeHtml(t.artist)}</p>
+          <div style="display:flex; justify-content:space-between; margin-top:8px;">
+            <span class="badge ${t.format === 'WAV' ? 'badge-wav' : 'badge-mp3'}">${t.format}</span>
+            <span style="font-size:0.75rem; color:var(--accent);">${t.format === 'WAV' ? '💎 Master' : 'Voľné'}</span>
+          </div>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    // Zaheslované štúdio
+    async function handleStudioUnlock(e) {
+      e.preventDefault();
+      const val = document.getElementById("studio-pass-input").value.trim();
+      const enc = new TextEncoder().encode(val);
+      const hashBuf = await crypto.subtle.digest("SHA-256", enc);
+      const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
+
+      if (hashHex === STUDIO_HASH) {
+        isStudioUnlocked = true;
+        sessionStorage.setItem("gv_studio_unlocked", "true");
+        checkStudioState();
+      } else {
+        alert("Nesprávne heslo štúdia!");
+      }
+    }
+
+    function checkStudioState() {
+      document.getElementById("studio-locked-screen").style.display = isStudioUnlocked ? "none" : "block";
+      document.getElementById("studio-unlocked-screen").style.display = isStudioUnlocked ? "block" : "none";
+      if (isStudioUnlocked) renderStudioTable();
+    }
+
+    function lockStudio() {
+      isStudioUnlocked = false;
+      sessionStorage.removeItem("gv_studio_unlocked");
+      checkStudioState();
+    }
+
+    function handleStudioUpload(e) {
+      e.preventDefault();
+      const size = parseFloat(document.getElementById("up-size").value);
+      const totalMB = allTracks.reduce((s, t) => s + parseFloat(t.sizeMB), 0);
+
+      if (totalMB + size > DEEPSTORAGE_LIMIT_MB) {
+        alert("Prekročený 50 GB mesačný limit nahrávania na DeepStorage!");
+        return;
+      }
+
+      const isPub = document.getElementById("up-visibility").value === "public";
+      const newT = {
+        id: "ds_" + Date.now().toString(36),
+        title: document.getElementById("up-title").value.trim(),
+        artist: document.getElementById("up-artist").value.trim(),
+        album: document.getElementById("up-album").value.trim(),
+        format: document.getElementById("up-format").value,
+        sizeMB: size,
+        isPublic: isPub,
+        url: document.getElementById("up-url").value.trim()
+      };
+
+      allTracks.unshift(newT);
+      localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
+      renderAllTables();
+      updateStorageUI();
+      alert("Skladba uložená!");
+    }
+
+    function renderStudioTable() {
+      const tbody = document.getElementById("studio-table-body");
+      if (!tbody) return;
+      tbody.innerHTML = "";
+      allTracks.forEach(t => {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td><strong>${escapeHtml(t.title)}</strong><br><small>${escapeHtml(t.artist)}</small></td>
+          <td>${t.format} (${t.sizeMB} MB)</td>
+          <td>${t.isPublic ? '🌐 Verejné' : '🔒 Súkromné'}</td>
+          <td>
+            <button class="btn btn-outline" style="padding:4px 8px; font-size:0.75rem;" onclick="togglePublic('${t.id}')">Zmeniť</button>
+          </td>
+          <td>
+            <button class="btn btn-danger" style="padding:4px 8px; font-size:0.75rem;" onclick="deleteTrack('${t.id}')">Zmazať</button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function togglePublic(id) {
+      const t = allTracks.find(x => x.id === id);
+      if (t) {
+        t.isPublic = !t.isPublic;
+        localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
+        renderAllTables();
+      }
+    }
+
+    function deleteTrack(id) {
+      if (confirm("Zmazať túto skladbu?")) {
+        allTracks = allTracks.filter(x => x.id !== id);
+        localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
+        renderAllTables();
+        updateStorageUI();
+      }
+    }
+
+    function updateStorageUI() {
+      const totalMB = allTracks.reduce((s, t) => s + parseFloat(t.sizeMB), 0);
+      const pct = Math.min((totalMB / DEEPSTORAGE_LIMIT_MB) * 100, 100).toFixed(2);
+      document.getElementById("storage-fill-bar").style.width = pct + "%";
+      document.getElementById("storage-used-txt").textContent = `Využité: ${totalMB.toFixed(1)} MB z 50 000 MB`;
+      document.getElementById("storage-percent-txt").textContent = `${pct} %`;
+    }
+
+    // Prehrávanie
+    function playAudio(url, title, artist) {
+      document.getElementById("player-title").textContent = title;
+      document.getElementById("player-artist").textContent = artist;
+      audioEngine.src = url;
+      audioEngine.play().then(() => {
+        document.getElementById("main-play-btn").textContent = "⏸";
+      }).catch(() => {
+        document.getElementById("main-play-btn").textContent = "⏸";
+      });
+    }
+
+    function togglePlay() {
+      if (!audioEngine.src) { playRandomPublic(); return; }
+      if (audioEngine.paused) {
+        audioEngine.play();
+        document.getElementById("main-play-btn").textContent = "⏸";
+      } else {
+        audioEngine.pause();
+        document.getElementById("main-play-btn").textContent = "▶";
+      }
+    }
+
+    function playRandomPublic() {
+      const pub = allTracks.filter(t => t.isPublic);
+      if (pub.length) {
+        const r = pub[Math.floor(Math.random() * pub.length)];
+        playAudio(r.url, r.title, r.artist);
+      }
+    }
+    function playNext() { playRandomPublic(); }
+    function playPrev() { playRandomPublic(); }
+    function handleSeek(v) {
+      if (!isNaN(audioEngine.duration)) audioEngine.currentTime = (v / 100) * audioEngine.duration;
+    }
+
+    function switchTab(id) {
+      document.querySelectorAll(".tab-pane").forEach(el => el.style.display = "none");
+      document.querySelectorAll(".nav-item").forEach(el => el.classList.remove("active"));
+      const t = document.getElementById(id);
+      if (t) t.style.display = "block";
+      const nav = Array.from(document.querySelectorAll(".nav-item")).find(el => el.getAttribute("onclick")?.includes(id));
+      if (nav) nav.classList.add("active");
+      if (id === "tab-studio") checkStudioState();
+    }
+
+    function handleSearch(q) { renderPublicCatalog(q); }
+    function closeModal(id) { document.getElementById(id).classList.remove("active"); }
+    function acceptModalOffer() {
+      closeModal("connection-offer-modal");
+      triggerMonthlyCheckout();
+    }
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+  </script>
+</body>
+</html>
