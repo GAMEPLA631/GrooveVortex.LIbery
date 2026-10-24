@@ -37,7 +37,6 @@
       user-select: none;
     }
 
-    /* Bočný panel */
     aside {
       width: var(--sidebar-w);
       background-color: var(--surface);
@@ -91,7 +90,6 @@
       border-left: 3px solid var(--accent);
     }
 
-    /* Hlavný kontajner */
     main {
       flex: 1;
       display: flex;
@@ -145,7 +143,6 @@
       cursor: pointer;
     }
 
-    /* Časovač expirácie v hlavičke */
     .sub-timer-badge {
       background: rgba(251, 191, 36, 0.15);
       border: 1px solid var(--trol-gold);
@@ -161,7 +158,6 @@
 
     .content-area { padding: 32px; display: flex; flex-direction: column; gap: 32px; }
 
-    /* Karty a tabuľky */
     .section-title {
       font-size: 1.3rem;
       font-weight: 700;
@@ -231,7 +227,6 @@
     td { padding: 12px 18px; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
     tr:hover td { background: rgba(255,255,255,0.02); }
 
-    /* Balíky & Cenník */
     .holiday-banner {
       background: linear-gradient(90deg, #ec4899, #f43f5e);
       color: #fff;
@@ -278,28 +273,12 @@
       gap: 8px;
       line-height: 1.4;
     }
-    .features-list li.paid-feature {
-      color: #fff;
-      font-weight: 600;
-    }
-    .features-list li.paid-feature::before {
-      content: "💎";
-    }
-    .features-list li.free-feature::before {
-      content: "✓";
-      color: var(--accent);
-      font-weight: bold;
-    }
-    .features-list li.locked-feature {
-      color: var(--text-muted);
-      text-decoration: line-through;
-    }
-    .features-list li.locked-feature::before {
-      content: "✕";
-      color: var(--danger);
-    }
+    .features-list li.paid-feature { color: #fff; font-weight: 600; }
+    .features-list li.paid-feature::before { content: "💎"; }
+    .features-list li.free-feature::before { content: "✓"; color: var(--accent); font-weight: bold; }
+    .features-list li.locked-feature { color: var(--text-muted); text-decoration: line-through; }
+    .features-list li.locked-feature::before { content: "✕"; color: var(--danger); }
 
-    /* Veľká platobná brána */
     .checkout-modal-card {
       background: var(--surface);
       border: 1px solid var(--border);
@@ -372,7 +351,6 @@
       margin-top: 6px;
     }
 
-    /* Tlačidlá */
     button, .btn {
       padding: 10px 18px;
       border-radius: 20px;
@@ -392,7 +370,6 @@
     .btn-outline:hover { background: rgba(255,255,255,0.06); }
     .btn-danger { background: var(--danger); color: #fff; }
 
-    /* Prehrávač */
     .bottom-player {
       position: fixed;
       bottom: 0; left: 0; right: 0;
@@ -421,7 +398,6 @@
       background: var(--accent);
     }
 
-    /* Modály */
     .modal-overlay {
       position: fixed;
       inset: 0;
@@ -445,7 +421,6 @@
 </head>
 <body>
 
-  <!-- Bočná navigácia -->
   <aside>
     <div class="brand">
       <div class="brand-icon">⚡</div>
@@ -474,7 +449,6 @@
     </div>
   </aside>
 
-  <!-- Hlavné okno -->
   <main>
     <header>
       <div class="search-box">
@@ -482,7 +456,6 @@
         <input type="text" placeholder="Hľadať skladbu, interpreta, formát..." oninput="handleSearch(this.value)">
       </div>
       <div class="top-controls">
-        <!-- Živý odpočet prémiového času -->
         <div id="expiration-timer-pill" class="sub-timer-badge" style="display:none;">
           <span>⏳</span> <span id="timer-countdown-text">Počítam...</span>
         </div>
@@ -566,8 +539,8 @@
           </div>
 
           <div style="background:var(--elevated); padding:24px; border-radius:12px; margin-bottom:24px; border:1px solid var(--border);">
-            <h3>Nahrať novú skladbu</h3>
-            <form onsubmit="handleStudioUpload(event)" style="margin-top:14px;">
+            <h3>Nahrať novú skladbu (MP3 / WAV)</h3>
+            <form id="studio-upload-form" onsubmit="handleStudioUpload(event)" style="margin-top:14px;">
               <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(180px, 1fr)); gap:10px;">
                 <input type="text" id="up-title" placeholder="Názov skladby *" required>
                 <input type="text" id="up-artist" placeholder="Interpret *" required>
@@ -576,14 +549,19 @@
                   <option value="MP3">MP3 (Stream)</option>
                   <option value="WAV">WAV (Platený Master)</option>
                 </select>
-                <input type="number" id="up-size" step="0.1" placeholder="Veľkosť v MB *" required>
+                <input type="number" id="up-size" step="0.1" placeholder="Veľkosť v MB (auto) *" required>
                 <select id="up-visibility">
                   <option value="private">🔒 Súkromné (Iba v štúdiu)</option>
                   <option value="public">🌐 Zverejniť verejne</option>
                 </select>
               </div>
-              <input type="url" id="up-url" placeholder="DeepStorage Verejný odkaz (https://share.deepstorage.dev/...)" required style="margin-top:10px;">
-              <button type="submit" class="btn btn-accent" style="margin-top:12px;">Uložiť do štúdia</button>
+
+              <div style="margin-top:12px;">
+                <label style="font-size:0.75rem; color:var(--text-dim); display:block; margin-bottom:4px;">Vyberte MP3 / WAV audio súbor z počítača *</label>
+                <input type="file" id="up-file" accept="audio/*,.mp3,.wav" required style="padding:8px; cursor:pointer; background:#090d16; border:1px solid var(--border); border-radius:6px; width:100%; color:#fff;">
+              </div>
+
+              <button type="submit" class="btn btn-accent" style="margin-top:14px;">Nahrať a uložiť do štúdia</button>
             </form>
           </div>
 
@@ -617,7 +595,6 @@
         <div id="holiday-banner-area"></div>
 
         <div class="pricing-grid">
-          <!-- 1. Skúšobná verzia (7 Dní) -->
           <div class="pricing-card">
             <h3>7-Dňový Free Trial</h3>
             <p style="color:var(--text-dim); font-size:0.8rem;">Bezplatná skúška funkcií na 7 dní</p>
@@ -633,7 +610,6 @@
             <button class="btn btn-outline" onclick="openCheckout('trial', '7-Dňový Skúšobný Trial', 0, 7)">Aktivovať 7 Dní Skúšky</button>
           </div>
 
-          <!-- 2. Mesačný TROL -->
           <div class="pricing-card featured">
             <span style="position:absolute; top:-10px; right:16px; background:var(--trol-gold); color:#000; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:10px;">NAJPREDÁVANEJŠIE</span>
             <h3>TROL Mesačne (30 Dní)</h3>
@@ -653,7 +629,6 @@
             <button class="btn btn-gold" id="btn-buy-monthly" onclick="triggerMonthlyCheckout()">Kúpiť Mesačný TROL</button>
           </div>
 
-          <!-- 3. Ročný TROL -->
           <div class="pricing-card">
             <span style="position:absolute; top:-10px; right:16px; background:var(--accent); color:#000; font-size:0.7rem; font-weight:800; padding:2px 8px; border-radius:10px;">ZĽAVA ROKA</span>
             <h3>TROL Ročne (365 Dní)</h3>
@@ -695,7 +670,6 @@
     </div>
   </main>
 
-  <!-- Spodný sticky prehrávač -->
   <div class="bottom-player">
     <div style="display:flex; align-items:center; gap:12px;">
       <div style="width:48px; height:48px; border-radius:6px; background:#1e293b; display:grid; place-items:center; font-size:1.5rem;" id="player-art">🎵</div>
@@ -720,7 +694,7 @@
 
   <audio id="audio-engine" preload="none"></audio>
 
-  <!-- VEĽKÁ PLATOBNÁ BRÁNA S MNOHÝMI POLÍČKAMI -->
+  <!-- VEĽKÁ PLATOBNÁ BRÁNA -->
   <div class="modal-overlay" id="checkout-modal">
     <div class="checkout-modal-card">
       <button class="modal-close" onclick="closeModal('checkout-modal')">&times;</button>
@@ -734,8 +708,6 @@
 
       <form id="full-checkout-form" onsubmit="processFullCheckout(event)">
         <div class="checkout-layout">
-          
-          <!-- Ľavý stĺpec: Fakturačné údaje -->
           <div>
             <div class="checkout-group-title">1. Fakturačné Údaje Zákazníka</div>
             <div class="field-grid">
@@ -811,7 +783,6 @@
             </div>
           </div>
 
-          <!-- Pravý stĺpec: Rekapitulácia a Platba -->
           <div>
             <div class="checkout-group-title">3. Rekapitulácia Objednávky</div>
             <div class="order-summary-box">
@@ -856,13 +827,12 @@
               </button>
             </div>
           </div>
-
         </div>
       </form>
     </div>
   </div>
 
-  <!-- MODÁLNE OKNO: VYSKAKOVACIA PONUKA PRI KAŽDOM PRIPOJENÍ -->
+  <!-- MODÁLNA PONUKA PRI PRIPOJENÍ -->
   <div class="modal-overlay" id="connection-offer-modal">
     <div style="background:var(--surface); border:1px solid var(--border); border-radius:18px; max-width:440px; width:100%; padding:28px; text-align:center; position:relative;">
       <button class="modal-close" onclick="closeModal('connection-offer-modal')">&times;</button>
@@ -881,7 +851,6 @@
 
   <script>
     const DEEPSTORAGE_LIMIT_MB = 50000;
-    const STUDIO_HASH = "e36e6c86a117565780eb7c7f394c86716bcfa58c40ff5eeef4ef55e8c3b7a8fa"; // "vortex2026"
 
     const CURRENCIES = {
       EUR: { symbol: "€", rate: 1.0 },
@@ -890,7 +859,6 @@
     };
     let currentCurrency = "EUR";
 
-    // Základné skladby
     let allTracks = JSON.parse(localStorage.getItem("gv_all_tracks")) || [
       {
         id: "ds_01",
@@ -924,7 +892,6 @@
       }
     ];
 
-    // Stav predplatného v databáze (localStorage)
     let userSubscription = JSON.parse(localStorage.getItem("gv_user_subscription")) || {
       plan: "free",
       name: "Free",
@@ -935,32 +902,51 @@
     let activeCheckoutPlan = null;
     const audioEngine = document.getElementById("audio-engine");
 
-    // Štart aplikácie
     window.addEventListener("load", () => {
       calculateAndRenderPricing();
       renderAllTables();
       updateStorageUI();
       checkStudioState();
       
-      // Spustenie overovacieho enginu expirácie každú sekundu
       checkSubscriptionExpiration();
       setInterval(checkSubscriptionExpiration, 1000);
 
-      // Zobraziť ponuku pri každom pripojení
       setTimeout(() => {
         document.getElementById("connection-offer-modal").classList.add("active");
       }, 700);
 
-      // Poslucháče prehrávača
       audioEngine.addEventListener("timeupdate", () => {
         if (!isNaN(audioEngine.duration)) {
           document.getElementById("seek-bar").value = (audioEngine.currentTime / audioEngine.duration) * 100 || 0;
         }
       });
       audioEngine.addEventListener("ended", playNext);
+
+      // Automatické načítanie detailov audio súboru
+      const fileInput = document.getElementById("up-file");
+      if (fileInput) {
+        fileInput.addEventListener("change", (e) => {
+          const file = e.target.files[0];
+          if (file) {
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
+            document.getElementById("up-size").value = sizeMB;
+
+            const titleInput = document.getElementById("up-title");
+            if (!titleInput.value) {
+              titleInput.value = file.name.replace(/\.[^/.]+$/, "");
+            }
+
+            const formatSelect = document.getElementById("up-format");
+            if (file.name.toLowerCase().endsWith(".wav")) {
+              formatSelect.value = "WAV";
+            } else {
+              formatSelect.value = "MP3";
+            }
+          }
+        });
+      }
     });
 
-    // --- ENGINE KONTROLY EXPIRÁCIE A ODSTRÁNENIA Z DATABÁZY ---
     function checkSubscriptionExpiration() {
       const timerPill = document.getElementById("expiration-timer-pill");
       const countdownTxt = document.getElementById("timer-countdown-text");
@@ -977,9 +963,7 @@
       const expiry = parseInt(userSubscription.expiresAt);
       const remaining = expiry - now;
 
-      // AK ČAS VYPRŠAL -> AUTOMATICKY VYMAZAŤ PRÉMIUM Z DATABÁZY
       if (remaining <= 0) {
-        // Zmazať prémium a uložiť bezplatný plán
         userSubscription = { plan: "free", name: "Free", expiresAt: null };
         localStorage.setItem("gv_user_subscription", JSON.stringify(userSubscription));
         
@@ -987,13 +971,11 @@
         sideStatus.textContent = "Plán: Bezplatný (Free)";
         renderAllTables();
 
-        // Upozornenie pre používateľa
         alert("⚠️ VAŠE PREDPLATNÉ VYPRŠALO!\n\nSystém automaticky vymazal prémiový status z databázy. Prístup k sťahovaniu WAV Masterov a plateným výhodám bol zablokovaný. Pre obnovenie prístupu si musíte zakúpiť nový balík.");
         switchTab("tab-trol");
         return;
       }
 
-      // Ak je stále platné -> zobrazovať živý odpočet
       timerPill.style.display = "flex";
       sideStatus.textContent = `Plán: ${userSubscription.name}`;
       sideStatus.style.color = "var(--trol-gold)";
@@ -1006,18 +988,15 @@
       countdownTxt.textContent = `${userSubscription.name}: Zostáva ${days}d ${hours}h ${minutes}m ${seconds}s`;
     }
 
-    // --- DYNAMICKÝ CENOVÝ ALGORITMUS (2 Mesiace + Kalendár Sviatkov) ---
     function getDynamicPricing() {
       const now = new Date();
       const month = now.getMonth();
       const day = now.getDate();
 
-      // 2-mesačný cyklus
       const isHighCycle = (Math.floor(month / 2) % 2 === 1);
       let baseMonthlyEUR = isHighCycle ? 8.99 : 5.99;
       let baseAnnualEUR = isHighCycle ? 69.99 : 49.99;
 
-      // Kalendár sviatkov
       let activeHoliday = null;
       if (month === 0 && day <= 6) activeHoliday = "Novoročný Sviatok";
       else if (month === 1 && day >= 10 && day <= 16) activeHoliday = "Valentínska Zľava";
@@ -1027,7 +1006,7 @@
       else if (month === 10 && day >= 20) activeHoliday = "Black Friday";
       else if (month === 11 && day >= 18) activeHoliday = "Vianočné Sviatky";
 
-      const discountFactor = activeHoliday ? 0.6 : 1.0; // 40 % zľava pri sviatku
+      const discountFactor = activeHoliday ? 0.6 : 1.0;
 
       return {
         isHighCycle,
@@ -1076,7 +1055,6 @@
       calculateAndRenderPricing();
     }
 
-    // --- OTVORENIE VEĽKEJ PLATOBNEJ BRÁNY ---
     function triggerMonthlyCheckout() {
       const p = getDynamicPricing();
       openCheckout('monthly', 'TROL Mesačne (30 Dní)', p.monthlyEUR, 30);
@@ -1130,11 +1108,9 @@
       btn.textContent = "⏳ Autorizujem platbu a overujem 3D Secure...";
 
       setTimeout(() => {
-        // Vypočítať presný čas expirácie
         const now = Date.now();
         const expiryTimestamp = now + (activeCheckoutPlan.days * 24 * 60 * 60 * 1000);
 
-        // ULOŽIŤ DO DATABÁZY (localStorage)
         userSubscription = {
           plan: activeCheckoutPlan.key,
           name: activeCheckoutPlan.name,
@@ -1155,18 +1131,15 @@
       }, 1400);
     }
 
-    // --- OCHRANA PLATENÉHO OBSAHU ---
     function handleTrackAction(trackId, format) {
       const track = allTracks.find(t => t.id === trackId);
       if (!track) return;
 
-      // Ak ide o MP3 -> voľné prehratie
       if (format === "MP3") {
         playAudio(track.url, track.title, track.artist);
         return;
       }
 
-      // Ak ide o WAV Master -> STRIKTNE KONTROLOVAŤ ČLENSTVO V DATABÁZE
       if (format === "WAV") {
         if (!userSubscription || userSubscription.plan === "free" || !userSubscription.expiresAt) {
           alert("🔒 CHRÁNENÝ OBSAH:\n\nTento súbor je nekomprimovaný štúdiový WAV Master. Je prístupný výhradne pre členov s aktívnym balíkom TROL.\n\nProsím, aktivujte si členstvo v sekcii Cenník.");
@@ -1174,13 +1147,11 @@
           return;
         }
 
-        // Ak je predplatné aktívne -> povoliť stiahnutie z DeepStorage
         alert(`💎 LICENCIA OVERENÁ:\n\nSťahujem štúdiový súbor "${track.title}" z úložiska DeepStorage.dev`);
         window.open(track.url, "_blank");
       }
     }
 
-    // --- TABUĽKY A ŠTÚDIO ---
     function renderAllTables() {
       renderPublicCatalog();
       renderTrendingGrid();
@@ -1243,20 +1214,16 @@
       });
     }
 
-    // Zaheslované štúdio
-    async function handleStudioUnlock(e) {
+    function handleStudioUnlock(e) {
       e.preventDefault();
       const val = document.getElementById("studio-pass-input").value.trim();
-      const enc = new TextEncoder().encode(val);
-      const hashBuf = await crypto.subtle.digest("SHA-256", enc);
-      const hashHex = Array.from(new Uint8Array(hashBuf)).map(b => b.toString(16).padStart(2, '0')).join('');
 
-      if (hashHex === STUDIO_HASH) {
+      if (val === "vortex2026") {
         isStudioUnlocked = true;
         sessionStorage.setItem("gv_studio_unlocked", "true");
         checkStudioState();
       } else {
-        alert("Nesprávne heslo štúdia!");
+        alert("Nesprávne heslo štúdia! Zadajte: vortex2026");
       }
     }
 
@@ -1274,7 +1241,14 @@
 
     function handleStudioUpload(e) {
       e.preventDefault();
-      const size = parseFloat(document.getElementById("up-size").value);
+      const fileInput = document.getElementById("up-file");
+      const file = fileInput.files[0];
+      if (!file) {
+        alert("Vyberte audio súbor z počítača!");
+        return;
+      }
+
+      const size = parseFloat((file.size / (1024 * 1024)).toFixed(1));
       const totalMB = allTracks.reduce((s, t) => s + parseFloat(t.sizeMB), 0);
 
       if (totalMB + size > DEEPSTORAGE_LIMIT_MB) {
@@ -1282,23 +1256,25 @@
         return;
       }
 
+      const audioBlobUrl = URL.createObjectURL(file);
       const isPub = document.getElementById("up-visibility").value === "public";
       const newT = {
         id: "ds_" + Date.now().toString(36),
-        title: document.getElementById("up-title").value.trim(),
+        title: document.getElementById("up-title").value.trim() || file.name.replace(/\.[^/.]+$/, ""),
         artist: document.getElementById("up-artist").value.trim(),
-        album: document.getElementById("up-album").value.trim(),
+        album: document.getElementById("up-album").value.trim() || "Single",
         format: document.getElementById("up-format").value,
         sizeMB: size,
         isPublic: isPub,
-        url: document.getElementById("up-url").value.trim()
+        url: audioBlobUrl
       };
 
       allTracks.unshift(newT);
       localStorage.setItem("gv_all_tracks", JSON.stringify(allTracks));
       renderAllTables();
       updateStorageUI();
-      alert("Skladba uložená!");
+      document.getElementById("studio-upload-form").reset();
+      alert(`Skladba "${newT.title}" bola úspešne nahratá z počítača do štúdia!`);
     }
 
     function renderStudioTable() {
@@ -1348,7 +1324,6 @@
       document.getElementById("storage-percent-txt").textContent = `${pct} %`;
     }
 
-    // Prehrávanie
     function playAudio(url, title, artist) {
       document.getElementById("player-title").textContent = title;
       document.getElementById("player-artist").textContent = artist;
