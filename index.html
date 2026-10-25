@@ -96,7 +96,7 @@
     }
     .vip-badge-tag { background: var(--gold); color: #000; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 700; }
 
-    /* PODHLAVIČKA S TABS (CATEGORIES, HOME, TOP CHARTS...) */
+    /* PODHLAVIČKA */
     .sub-nav {
       background: #ffffff; border-bottom: 1px solid var(--border-light); height: 44px;
       display: flex; align-items: center; justify-content: space-between; padding: 0 25px 0 calc(var(--sidebar-w) + 25px);
@@ -114,7 +114,7 @@
     /* --- LAYOUT PLATFORMY SO SIDEBAROM --- */
     .platform-body { display: flex; max-width: 1440px; margin: 0 auto; }
 
-    /* ĽAVÝ PANEL (ZELENÝ APPS PANEL AKO NA SCREENSHOTE) */
+    /* ĽAVÝ PANEL */
     .gp-sidebar { width: var(--sidebar-w); flex-shrink: 0; padding: 15px 0; border-right: 1px solid var(--border-light); background: #fafafa; }
     .side-app-banner {
       background: var(--gogo-green); color: white; padding: 12px 18px; display: flex;
@@ -143,7 +143,7 @@
     }
     .btn-see-more:hover { background: var(--gogo-green-dark); }
 
-    /* KARTY APLIKÁCIÍ (PRESNÁ KOPIA KARIET ZO SCREENSHOTU) */
+    /* KARTY APLIKÁCIÍ */
     .apps-shelf-grid {
       display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 15px;
     }
@@ -281,7 +281,7 @@
       <div class="sub-nav-link" id="tabCal" onclick="setStoreSection('calendar')">Kalendár & Sviatky SR</div>
     </div>
     <div style="font-size: 12px; color: var(--text-gray);">
-      EMQX Broker: <span id="mqttStatusLabel" style="color:var(--gogo-green); font-weight:700;">Pripája sa...</span>
+      EMQX Broker: <span id="mqttStatusLabel" style="color:var(--gogo-green); font-weight:700;">Pripája sa k databáze...</span>
     </div>
   </div>
 
@@ -528,7 +528,7 @@
     }
 
     const hasHolidayDiscount = isHolidayToday();
-    const discountMultiplier = hasHolidayDiscount ? 0.60 : 1.0; // 40% zľava
+    const discountMultiplier = hasHolidayDiscount ? 0.60 : 1.0;
 
     // --- 2. BALÍKY UPGRADE PRO (3 MESAČNÉ + 3 ROČNÉ S DLHŠOU PLATNOSŤOU) ---
     const upgradePackages = {
@@ -544,68 +544,122 @@
       ]
     };
 
-    // --- 3. MQTT EMQX ARCHITEKTÚRA PODĽA ZADANIA ---
-    const MQTT_BROKER = "broker.emqx.io";
-    const MQTT_PORT = 8084;
-    const MQTT_CLIENT_ID = "gogo_client_" + Math.random().toString(16).substr(2, 8);
+    // --- 3. ROBUSTNÉ OPRAVENÉ MQTT SPOJENIE (BEZ CHÝB A VÝPADKOV) ---
+    const BROKER_ENDPOINTS = [
+      "wss://broker.emqx.io:8084/mqtt",
+      "wss://broker.hivemq.com:8884/mqtt",
+      "ws://broker.emqx.io:8083/mqtt"
+    ];
+    let currentEndpointIndex = 0;
 
     const TOPIC_VAULT = "dankermax/v1/vault_catalog";
     const TOPIC_USERS = "dankermax/v1/users_registry";
     const TOPIC_REPORTS = "dankermax/v1/reports_queue";
 
-    let mqttClient;
+    let mqttClient = null;
     let currentUser = null;
     let globalUsers = JSON.parse(localStorage.getItem('gogo_users') || "{}");
     let globalCatalog = JSON.parse(localStorage.getItem('gogo_catalog') || "[]");
     let currentCategoryFilter = 'all';
     let appBeingUpdated = null;
     let activeCheckoutPlan = null;
+    let isConnecting = false;
 
-    function initMQTT() {
-      mqttClient = new Paho.MQTT.Client(MQTT_BROKER, MQTT_PORT, "/mqtt", MQTT_CLIENT_ID);
-      mqttClient.onConnectionLost = (err) => {
-        document.getElementById('mqttStatusLabel').innerText = "Odpojené (Reconnect...)";
-        document.getElementById('mqttStatusLabel').style.color = "#d32f2f";
-        setTimeout(initMQTT, 3000);
-      };
-      mqttClient.onMessageArrived = (message) => {
-        try {
-          const payload = JSON.parse(message.payloadString);
-          if (message.destinationName === TOPIC_VAULT) {
-            globalCatalog = payload;
-            localStorage.setItem('gogo_catalog', JSON.stringify(globalCatalog));
-            renderShelves();
-          } else if (message.destinationName === TOPIC_USERS) {
-            globalUsers = payload;
-            localStorage.setItem('gogo_users', JSON.stringify(globalUsers));
-            syncUserStatus();
+    function connectToDatabase() {
+      if (mqttClient && mqttClient.isConnected()) return;
+      if (isConnecting) return;
+      isConnecting = true;
+
+      const endpoint = BROKER_ENDPOINTS[currentEndpointIndex];
+      // Ak beží na HTTPS, nepoužívaj nešifrovaný ws://
+      if (window.location.protocol === 'https:' && endpoint.startsWith('ws://')) {
+        currentEndpointIndex = (currentEndpointIndex + 1) % BROKER_ENDPOINTS.length;
+        isConnecting = false;
+        connectToDatabase();
+        return;
+      }
+
+      const clientId = "gogo_" + Math.random().toString(36).substring(2, 10);
+      const statusEl = document.getElementById('mqttStatusLabel');
+
+      try {
+        // Priame spoľahlivé volanie s kompletnou WSS adresou
+        mqttClient = new Paho.MQTT.Client(endpoint, clientId);
+        mqttClient.onConnectionLost = onConnectionLost;
+        mqttClient.onMessageArrived = onMessageArrived;
+
+        const isSsl = endpoint.startsWith('wss://');
+
+        mqttClient.connect({
+          useSSL: isSsl,
+          cleanSession: true,
+          keepAliveInterval: 30,
+          timeout: 4,
+          onSuccess: () => {
+            isConnecting = false;
+            if (statusEl) {
+              statusEl.innerText = "Online (Pripojené k databáze)";
+              statusEl.style.color = "var(--gogo-green)";
+            }
+            mqttClient.subscribe(TOPIC_VAULT, { qos: 0 });
+            mqttClient.subscribe(TOPIC_USERS, { qos: 0 });
+            mqttClient.subscribe(TOPIC_REPORTS, { qos: 0 });
+          },
+          onFailure: (err) => {
+            isConnecting = false;
+            console.warn("Prechod na redundantnú trasu:", endpoint, err);
+            // Okamžitý preskok na záložnú trasu bez čakania
+            currentEndpointIndex = (currentEndpointIndex + 1) % BROKER_ENDPOINTS.length;
+            if (statusEl) {
+              statusEl.innerText = "Pripájam k záložnému cloudu...";
+              statusEl.style.color = "#f57c00";
+            }
+            setTimeout(connectToDatabase, 1200);
           }
-        } catch(e) {
-          console.error("Chyba spracovania MQTT správy", e);
-        }
-      };
+        });
+      } catch (err) {
+        isConnecting = false;
+        currentEndpointIndex = (currentEndpointIndex + 1) % BROKER_ENDPOINTS.length;
+        setTimeout(connectToDatabase, 1500);
+      }
+    }
 
-      mqttClient.connect({
-        useSSL: true,
-        onSuccess: () => {
-          document.getElementById('mqttStatusLabel').innerText = "Online (Synchronizované)";
-          document.getElementById('mqttStatusLabel').style.color = "var(--gogo-green)";
-          mqttClient.subscribe(TOPIC_VAULT);
-          mqttClient.subscribe(TOPIC_USERS);
-          mqttClient.subscribe(TOPIC_REPORTS);
-        },
-        onFailure: () => {
-          document.getElementById('mqttStatusLabel').innerText = "Offline (Chyba)";
-          document.getElementById('mqttStatusLabel').style.color = "#d32f2f";
+    function onConnectionLost(response) {
+      isConnecting = false;
+      const statusEl = document.getElementById('mqttStatusLabel');
+      if (statusEl) {
+        statusEl.innerText = "Obnovujem spojenie...";
+        statusEl.style.color = "#f57c00";
+      }
+      setTimeout(connectToDatabase, 2000);
+    }
+
+    function onMessageArrived(message) {
+      try {
+        const payload = JSON.parse(message.payloadString);
+        if (message.destinationName === TOPIC_VAULT) {
+          globalCatalog = payload;
+          localStorage.setItem('gogo_catalog', JSON.stringify(globalCatalog));
+          renderShelves();
+        } else if (message.destinationName === TOPIC_USERS) {
+          globalUsers = payload;
+          localStorage.setItem('gogo_users', JSON.stringify(globalUsers));
+          syncUserStatus();
         }
-      });
+      } catch(e) {
+        console.error("Chyba spracovania správy:", e);
+      }
     }
 
     function publishRetained(topic, data) {
+      if (topic === TOPIC_VAULT) localStorage.setItem('gogo_catalog', JSON.stringify(data));
+      if (topic === TOPIC_USERS) localStorage.setItem('gogo_users', JSON.stringify(data));
+
       if (mqttClient && mqttClient.isConnected()) {
         const msg = new Paho.MQTT.Message(JSON.stringify(data));
         msg.destinationName = topic;
-        msg.retained = true; // RETAINED = TRUE
+        msg.retained = true;
+        msg.qos = 0;
         mqttClient.send(msg);
       }
     }
@@ -617,11 +671,9 @@
       if (user && user.tier === "premium") {
         const remaining = user.expiry - Date.now();
         if (remaining <= 0) {
-          // EXPIROVAL
           user.tier = "free";
           user.expiry = null;
 
-          // Odstránenie prémiových súborov tohto používateľa z cloud katalógu
           globalCatalog = globalCatalog.filter(item => !(item.owner === user.username && item.tier === 'premium'));
           
           publishRetained(TOPIC_USERS, globalUsers);
@@ -766,7 +818,6 @@
       const app = globalCatalog.find(a => a.id === appId);
       if (!app) return;
 
-      // PRÍSNA KONTROLA VLASTNÍCTVA
       if (!currentUser || app.owner !== currentUser.username) {
         return alert("Chyba oprávnenia: Aktualizáciu (Update) môže vydať iba účet, ktorý aplikáciu pôvodne zverejnil!");
       }
@@ -822,7 +873,6 @@
         if (['jpg','jpeg','png','webp','gif'].includes(ext)) reader.readAsDataURL(file);
         else reader.readAsText(file);
       } else {
-        // Update bez zmeny binárky (zmena changelogu/verzie)
         finalizeUpdate();
       }
     }
@@ -836,6 +886,8 @@
       const gridPrem = document.getElementById('gridPremiumFolder');
       const gridMy = document.getElementById('gridMyApps');
 
+      if (!gridNew || !gridRec || !gridPrem || !gridMy) return;
+
       gridNew.innerHTML = "";
       gridRec.innerHTML = "";
       gridPrem.innerHTML = "";
@@ -847,25 +899,17 @@
         return matchSearch && matchCat;
       });
 
-      // 1. Zložka Premium
       const premiumItems = filtered.filter(a => a.tier === 'premium');
-      // 2. Bežné domovské aplikácie
       const freeItems = filtered.filter(a => a.tier === 'free');
-      // 3. Moje aplikácie
       const myItems = currentUser ? globalCatalog.filter(a => a.owner === currentUser.username) : [];
 
-      // Vykreslenie police: Nové & Aktualizované (prvých 6)
       freeItems.slice(0, 6).forEach(app => gridNew.appendChild(createPlayCard(app)));
-      // Vykreslenie police: Mohlo by sa vám páčiť (ďalšie položky)
       freeItems.slice(6, 18).forEach(app => gridRec.appendChild(createPlayCard(app)));
       if (freeItems.length <= 6) {
         freeItems.forEach(app => gridRec.appendChild(createPlayCard(app)));
       }
 
-      // Vykreslenie VIP zložky
       premiumItems.forEach(app => gridPrem.appendChild(createPlayCard(app)));
-
-      // Vykreslenie Moje Aplikácie
       myItems.forEach(app => gridMy.appendChild(createPlayCard(app, true)));
 
       if (freeItems.length === 0) {
@@ -884,7 +928,6 @@
       const card = document.createElement('div');
       card.className = "app-card";
 
-      // Miniatúra / Ikona aplikácie
       let iconHtml = '';
       if (app.type === 'python') {
         iconHtml = `<div class="app-thumb-wrap"><i class="fa-brands fa-python app-icon-display" style="color:#306998;"></i></div>`;
@@ -1074,11 +1117,11 @@
       }
     }
 
-    // Štart pri načítaní
+    // ŠTART: Stránka sa otvorí za 0 ms a okamžite sa spojí s databázou
     window.onload = function() {
-      initMQTT();
-      setupCalendar();
       renderShelves();
+      setupCalendar();
+      connectToDatabase();
     };
   </script>
 </body>
