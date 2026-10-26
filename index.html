@@ -31,7 +31,7 @@
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Roboto', Arial, sans-serif; }
     body { background-color: var(--bg-store); color: var(--text-dark); min-height: 100vh; overflow-x: hidden; }
 
-    /* --- FULLSCREEN LOGIN/REGISTER S TAPETOU (S MOŽNOSŤOU VEREJNÉHO VSTUPU) --- */
+    /* --- FULLSCREEN LOGIN/REGISTER S TAPETOU --- */
     #authOverlay {
       position: fixed; inset: 0;
       background: linear-gradient(rgba(15, 23, 42, 0.88), rgba(0, 0, 0, 0.95)), 
@@ -39,7 +39,7 @@
       display: flex; justify-content: center; align-items: center; z-index: 999999;
     }
     .auth-box {
-      background: #ffffff; border-radius: 8px; padding: 35px; width: 100%; max-width: 420px;
+      background: #ffffff; border-radius: 8px; padding: 35px; width: 100%; max-width: 440px;
       box-shadow: 0 10px 30px rgba(0,0,0,0.5); text-align: center; position: relative;
     }
     .auth-close-btn {
@@ -64,9 +64,7 @@
       color: white; border-radius: 4px; font-weight: 700; cursor: pointer; font-size: 14px; transition: 0.2s;
     }
     .auth-btn:hover { background: var(--gogo-green-dark); }
-    .guest-btn {
-      background: #475569; margin-top: 10px;
-    }
+    .guest-btn { background: #475569; margin-top: 10px; }
     .guest-btn:hover { background: #334155; }
 
     /* --- TOP HEADER (GOOGLE PLAY ŠTÝL) --- */
@@ -110,7 +108,7 @@
       background: #ffffff; border-bottom: 1px solid var(--border-light); height: 44px;
       display: flex; align-items: center; justify-content: space-between; padding: 0 25px 0 calc(var(--sidebar-w) + 25px);
     }
-    .sub-nav-links { display: flex; gap: 24px; height: 100%; align-items: center; }
+    .sub-nav-links { display: flex; gap: 20px; height: 100%; align-items: center; }
     .sub-nav-link {
       font-size: 13px; font-weight: 500; color: var(--text-gray); text-decoration: none;
       cursor: pointer; height: 100%; display: flex; align-items: center; position: relative;
@@ -139,7 +137,7 @@
     .side-link i { width: 16px; text-align: center; font-size: 14px; }
     .side-link.vip-folder { color: #b78103; font-weight: 700; }
 
-    /* HLAVNÝ OBSAH (POLICE AKO V GOOGLE PLAY) */
+    /* HLAVNÝ OBSAH */
     .store-content { flex: 1; padding: 25px 30px; }
 
     .shelf-container { margin-bottom: 35px; }
@@ -184,6 +182,7 @@
     .btn-launch:hover { background: #3367d6; }
     .btn-update { background: #f57c00; color: white; }
     .btn-update:hover { background: #e65100; }
+    .btn-history { background: #475569; color: white; font-size: 10px; }
 
     /* BANNER SVIATKU A ZĽAVY */
     .holiday-bar {
@@ -192,12 +191,17 @@
       align-items: center; justify-content: space-between; font-size: 14px; font-weight: 500;
     }
 
-    /* MODÁLNE OKNO PRE UPDATE (IBA AUTOR) */
-    #updateModal, #uploadModal, #gopayModal {
+    /* MODÁLY */
+    #updateModal, #uploadModal, #gopayModal, #historyModal {
       position: fixed; inset: 0; background: rgba(0,0,0,0.7);
       display: none; justify-content: center; align-items: center; z-index: 10000;
     }
-    .modal-sheet { background: white; border-radius: 6px; width: 500px; padding: 25px; box-shadow: 0 5px 25px rgba(0,0,0,0.4); }
+    .modal-sheet { background: white; border-radius: 6px; width: 500px; padding: 25px; box-shadow: 0 5px 25px rgba(0,0,0,0.4); max-height: 90vh; overflow-y: auto; }
+
+    /* TABUĽKA VEREJNÝCH ÚČTOV */
+    .users-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 15px; margin-top: 15px; }
+    .user-card { background: #fff; border: 1px solid var(--border-light); border-radius: 6px; padding: 15px; display: flex; gap: 12px; align-items: center; }
+    .user-avatar-circle { width: 45px; height: 45px; border-radius: 50%; background: var(--gogo-green); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; }
 
     /* GOPAY STÝL BRÁNY */
     .gopay-box { background: #ffffff; color: #333; width: 620px; border-radius: 6px; overflow: hidden; box-shadow: 0 10px 30px rgba(0,0,0,0.5); font-size: 13px; }
@@ -223,7 +227,7 @@
 </head>
 <body>
 
-  <!-- FULLSCREEN LOGIN/REGISTER S TAPETOU (S MOŽNOSŤOU VEREJNÉHO VSTUPU) -->
+  <!-- FULLSCREEN LOGIN/REGISTER S TAPETOU -->
   <div id="authOverlay">
     <div class="auth-box">
       <button class="auth-close-btn" onclick="enterAsGuest()" title="Zavrieť a prehliadať verejne">&times;</button>
@@ -249,7 +253,7 @@
         <input type="text" id="regUser" placeholder="Meno vývojára / Tímu">
         <input type="email" id="regEmail" placeholder="E-mail">
         <input type="password" id="regPass" placeholder="Heslo">
-        <button class="auth-btn" onclick="executeRegister()" style="background:var(--gp-blue);"><i class="fa-solid fa-user-plus"></i> Zaregistrovať sa</button>
+        <button class="auth-btn" onclick="executeRegister()" style="background:var(--gp-blue);"><i class="fa-solid fa-user-plus"></i> Zaregistrovať sa do cloudu</button>
         <button class="auth-btn guest-btn" onclick="enterAsGuest()"><i class="fa-solid fa-globe"></i> Pokračovať bez registrácie</button>
       </div>
     </div>
@@ -277,7 +281,7 @@
         <span id="navExpiryCounter" style="font-size:11px; color:#c62828;"></span>
       </div>
 
-      <button id="authTriggerBtn" onclick="openAuthModal()" title="Prihlásiť / Registrovať" style="background:#f1f3f4; border:1px solid #ccc; padding:6px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer;">
+      <button onclick="openAuthModal()" title="Prihlásiť / Registrovať" style="background:#f1f3f4; border:1px solid #ccc; padding:6px 12px; border-radius:4px; font-size:12px; font-weight:700; cursor:pointer;">
         <i class="fa-solid fa-user"></i> Účet
       </button>
 
@@ -287,11 +291,12 @@
     </div>
   </header>
 
-  <!-- PODHLAVIČKA -->
+  <!-- PODHLAVIČKA S NAVIGÁCIOU VRÁTANE VEREJNÝCH ÚČTOV -->
   <div class="sub-nav">
     <div class="sub-nav-links">
       <div class="sub-nav-link active" id="tabHome" onclick="setStoreSection('home')">Domov (Verejné)</div>
       <div class="sub-nav-link" id="tabVip" onclick="setStoreSection('premium')">⭐ VIP Zložka</div>
+      <div class="sub-nav-link" id="tabUsers" onclick="setStoreSection('users')">👥 Verejné Účty (Cloud)</div>
       <div class="sub-nav-link" id="tabMy" onclick="setStoreSection('my_apps')">Moje aplikácie & Aktualizácie</div>
       <div class="sub-nav-link" id="tabPro" onclick="setStoreSection('plans')">Upgrade PRO (Cenník)</div>
       <div class="sub-nav-link" id="tabCal" onclick="setStoreSection('calendar')">Kalendár & Sviatky SR</div>
@@ -301,7 +306,7 @@
     </div>
   </div>
 
-  <!-- HLAVNÉ TELO S BOČNÝM PANELOM (SIDEBAR) -->
+  <!-- HLAVNÉ TELO SO SIDEBAROM -->
   <div class="platform-body">
     
     <!-- ĽAVÝ PANEL -->
@@ -314,6 +319,7 @@
       <div class="side-group">
         <a class="side-link active" id="sideLinkHome" onclick="setStoreSection('home')"><i class="fa-solid fa-house"></i> Domovská stránka</a>
         <a class="side-link vip-folder" id="sideLinkVip" onclick="setStoreSection('premium')"><i class="fa-solid fa-crown" style="color:var(--gold);"></i> VIP Premium Zložka</a>
+        <a class="side-link" id="sideLinkUsers" onclick="setStoreSection('users')"><i class="fa-solid fa-users"></i> Verejné účty v cloude</a>
         <a class="side-link" id="sideLinkMy" onclick="setStoreSection('my_apps')"><i class="fa-solid fa-user-gear"></i> Moje zverejnené app</a>
       </div>
 
@@ -331,7 +337,7 @@
       </div>
     </aside>
 
-    <!-- STREDOVÝ OBSAH S POLICAMI APPIEK -->
+    <!-- STREDOVÝ OBSAH -->
     <main class="store-content">
 
       <!-- BANNER 40% ZĽAVY PRI SVIATKOCH -->
@@ -350,13 +356,11 @@
           <div class="shelf-header">
             <div>
               <div class="shelf-title">Nové a aktualizované aplikácie</div>
-              <div class="shelf-sub">Všetky skripty sú verejne prístupné na stiahnutie a spustenie</div>
+              <div class="shelf-sub">Všetky skripty a updaty sú trvalo synchronizované v EMQX cloude</div>
             </div>
             <button class="btn-see-more" onclick="filterCategory('all')">Zobraziť viac</button>
           </div>
-          <div class="apps-shelf-grid" id="gridNewApps">
-            <!-- Dynamicky generované karty -->
-          </div>
+          <div class="apps-shelf-grid" id="gridNewApps"></div>
         </div>
 
         <!-- POLICA 2: MOHLO BY SA VÁM PÁČIŤ... -->
@@ -364,29 +368,36 @@
           <div class="shelf-header">
             <div>
               <div class="shelf-title">Mohlo by sa vám páčiť...</div>
-              <div class="shelf-sub">Verejné cloudové projekty z EMQX databázy</div>
+              <div class="shelf-sub">Verejné cloudové projekty z databázy</div>
             </div>
             <button class="btn-see-more" onclick="filterCategory('python')">Zobraziť viac</button>
           </div>
-          <div class="apps-shelf-grid" id="gridRecommendedApps">
-            <!-- Dynamicky generované karty -->
-          </div>
+          <div class="apps-shelf-grid" id="gridRecommendedApps"></div>
         </div>
 
       </div>
 
-      <!-- VYHRADENÁ ZLOŽKA PRE PREMIUM APLIKÁCIE (TERAZ TIEŽ VEREJNE VIDITEĽNÁ) -->
+      <!-- VEREJNÁ ZLOŽKA PRE PREMIUM APLIKÁCIE -->
       <div id="sectionPremium" style="display:none;">
         <div class="shelf-header">
           <div>
             <div class="shelf-title" style="color:#b78103;"><i class="fa-solid fa-crown"></i> VIP Premium Zložka</div>
-            <div class="shelf-sub">Všetky prémiové projekty a Python/HTML skripty – verejne zobrazené a otvorené</div>
+            <div class="shelf-sub">Prémiové projekty a Python/HTML skripty – verejne zobrazené v cloude</div>
           </div>
           <button class="btn-see-more" onclick="setStoreSection('plans')">Aktivovať VIP Účet</button>
         </div>
-        <div class="apps-shelf-grid" id="gridPremiumFolder">
-          <!-- Dynamicky generované karty -->
+        <div class="apps-shelf-grid" id="gridPremiumFolder"></div>
+      </div>
+
+      <!-- SEKCIA: VEREJNÉ CLOUDOVÉ ÚČTY -->
+      <div id="sectionUsers" style="display:none;">
+        <div class="shelf-header">
+          <div>
+            <div class="shelf-title"><i class="fa-solid fa-users"></i> Verejné Používateľské Účty v Cloude</div>
+            <div class="shelf-sub">Globálna verejná databáza vývojárov zosynchronizovaná cez <code>dankermax/v1/users_registry</code></div>
+          </div>
         </div>
+        <div class="users-grid" id="usersListContainer"></div>
       </div>
 
       <!-- SEKCIA: MOJE APLIKÁCIE A SPRÁVA AKTUALIZÁCIÍ -->
@@ -397,9 +408,7 @@
             <div class="shelf-sub">Tu môžete vydávať nové verzie (Update) iba k aplikáciám, ktoré ste sami zverejnili</div>
           </div>
         </div>
-        <div class="apps-shelf-grid" id="gridMyApps">
-          <!-- Karty usera s tlačidlom Aktualizovať -->
-        </div>
+        <div class="apps-shelf-grid" id="gridMyApps"></div>
       </div>
 
       <!-- SEKCIA: CENNÍK PRO BALÍKOV (3 MESAČNÉ + 3 ROČNÉ) -->
@@ -434,7 +443,7 @@
     </main>
   </div>
 
-  <!-- MODAL: PUBLIKOVAŤ NOVÚ APP (VEREJNE DOSTUPNÉ PRE KAŽDÉHO) -->
+  <!-- MODAL: PUBLIKOVAŤ NOVÚ APP -->
   <div id="uploadModal">
     <div class="modal-sheet">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -457,22 +466,33 @@
     </div>
   </div>
 
-  <!-- MODAL: VYDANIE NOVEJ VERZIE / UPDATE (IBA PÔVODNÝ AUTOR) -->
+  <!-- MODAL: VYDANIE NOVEJ VERZIE / UPDATE (UKLADÁ SA NATRVALO DO CLOUDU) -->
   <div id="updateModal">
     <div class="modal-sheet">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-        <h3 style="font-size:16px; color:#f57c00;"><i class="fa-solid fa-arrows-rotate"></i> Vydanie aktualizácie (Update)</h3>
+        <h3 style="font-size:16px; color:#f57c00;"><i class="fa-solid fa-arrows-rotate"></i> Vydanie aktualizácie do Cloudu</h3>
         <button onclick="closeUpdateModal()" style="border:none; background:none; font-size:18px; cursor:pointer;">&times;</button>
       </div>
       <p style="font-size:12px; color:var(--text-gray); margin-bottom:12px;">Aktualizujete aplikáciu: <b id="upAppNameLabel"></b></p>
       
       <input type="text" id="upVersionTag" placeholder="Nová verzia (napr. v1.1 alebo v2.0)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px;">
-      <textarea id="upChangelog" placeholder="Čo je nové v tomto update? (Changelog)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px; height:70px; resize:none;"></textarea>
+      <textarea id="upChangelog" placeholder="Čo je nové v tomto update? (Changelog do cloudu)" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ccc; border-radius:4px; height:70px; resize:none;"></textarea>
       
       <label style="font-size:12px; color:var(--text-gray); display:block; margin-bottom:4px;">Nahrajte nový súbor aktualizácie:</label>
       <input type="file" id="upNewFile" style="width:100%; padding:8px; margin-bottom:20px; border:1px solid #ccc; border-radius:4px;">
 
-      <button class="auth-btn" style="background:#f57c00;" onclick="submitAppUpdate()"><i class="fa-solid fa-check"></i> Vydávať Update</button>
+      <button class="auth-btn" style="background:#f57c00;" onclick="submitAppUpdate()"><i class="fa-solid fa-cloud-arrow-up"></i> Uložiť Update do Cloudu</button>
+    </div>
+  </div>
+
+  <!-- MODAL: HISTÓRIA CLOUDOVÝCH AKTUALIZÁCIÍ -->
+  <div id="historyModal">
+    <div class="modal-sheet">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h3 style="font-size:16px; color:#333;"><i class="fa-solid fa-timeline"></i> Cloudová história aktualizácií</h3>
+        <button onclick="closeHistoryModal()" style="border:none; background:none; font-size:18px; cursor:pointer;">&times;</button>
+      </div>
+      <div id="historyModalContent"></div>
     </div>
   </div>
 
@@ -625,7 +645,7 @@
             isConnecting = false;
             currentEndpointIndex = (currentEndpointIndex + 1) % BROKER_ENDPOINTS.length;
             if (statusEl) {
-              statusEl.innerText = "Pripájam k záložnému verejnému cloudu...";
+              statusEl.innerText = "Pripájam k záložnému cloudu...";
               statusEl.style.color = "#f57c00";
             }
             setTimeout(connectToDatabase, 1200);
@@ -659,6 +679,7 @@
           globalUsers = payload;
           localStorage.setItem('gogo_users', JSON.stringify(globalUsers));
           syncUserStatus();
+          renderPublicUsers();
         }
       } catch(e) {
         console.error("Chyba spracovania správy:", e);
@@ -696,6 +717,7 @@
           alert("Vaše VIP predplatné vypršalo! Prémiové aplikácie boli automaticky zmazané z cloud databázy.");
           syncUserStatus();
           renderShelves();
+          renderPublicUsers();
         } else {
           const days = Math.floor(remaining / (1000 * 60 * 60 * 24));
           const hours = Math.floor((remaining / (1000 * 60 * 60)) % 24);
@@ -705,7 +727,7 @@
     }
     setInterval(checkExpiration, 20000);
 
-    // --- 5. PRIHLASOVANIE, REGISTRÁCIA & VEREJNÝ VSTUP ---
+    // --- 5. PRIHLASOVANIE, REGISTRÁCIA & VEREJNÉ ÚČTY ---
     function enterAsGuest() {
       document.getElementById('authOverlay').style.display = 'none';
       if (!currentUser) {
@@ -737,9 +759,18 @@
       const p = document.getElementById('regPass').value.trim();
 
       if (!u || !p) return alert("Vyplňte všetky polia.");
-      if (globalUsers[u]) return alert("Tento vývojársky účet už existuje!");
+      if (globalUsers[u]) return alert("Tento vývojársky účet už existuje v cloude!");
 
-      globalUsers[u] = { username: u, email: e, pass: p, tier: "free", expiry: null };
+      globalUsers[u] = {
+        username: u,
+        email: e,
+        pass: p,
+        tier: "free",
+        expiry: null,
+        joinedAt: new Date().toLocaleDateString('sk-SK')
+      };
+      
+      // Zápis do verejného cloudu
       publishRetained(TOPIC_USERS, globalUsers);
       onLoginSuccess(u);
     }
@@ -760,6 +791,7 @@
       document.getElementById('authOverlay').style.display = 'none';
       syncUserStatus();
       renderShelves();
+      renderPublicUsers();
     }
 
     function handleLogout() {
@@ -784,6 +816,45 @@
         document.getElementById('navExpiryCounter').innerText = "";
       }
       checkExpiration();
+    }
+
+    // VYKRESLENIE VEREJNÝCH ÚČTOV V CLOUDE
+    function renderPublicUsers() {
+      const container = document.getElementById('usersListContainer');
+      if (!container) return;
+      container.innerHTML = "";
+
+      const userKeys = Object.keys(globalUsers);
+      if (userKeys.length === 0) {
+        container.innerHTML = `<div style="grid-column:1/-1; padding:20px; color:#777;">Žiadne účty v cloudovom registri. Zaregistrujte sa ako prvý!</div>`;
+        return;
+      }
+
+      userKeys.forEach(key => {
+        const u = globalUsers[key];
+        const publishedCount = globalCatalog.filter(a => a.owner === u.username).length;
+        const isVip = u.tier === "premium";
+
+        const card = document.createElement('div');
+        card.className = "user-card";
+        card.innerHTML = `
+          <div class="user-avatar-circle" style="background:${isVip ? 'var(--gold)' : 'var(--gogo-green)'}">
+            ${u.username.charAt(0).toUpperCase()}
+          </div>
+          <div style="overflow:hidden;">
+            <div style="font-weight:700; font-size:14px; display:flex; align-items:center; gap:6px;">
+              ${u.username} ${isVip ? '<span class="vip-badge-tag">VIP</span>' : ''}
+            </div>
+            <div style="font-size:11px; color:var(--text-gray); margin-top:2px;">
+              Publikované app: <b>${publishedCount}</b>
+            </div>
+            <div style="font-size:10px; color:#999; margin-top:2px;">
+              Registrovaný: ${u.joinedAt || 'Cloud Profil'}
+            </div>
+          </div>
+        `;
+        container.appendChild(card);
+      });
     }
 
     // --- 6. VEREJNÉ PUBLIKOVANIE SÚBORU DO CLOUDU ---
@@ -831,24 +902,33 @@
           size: (file.size / 1024).toFixed(1) + " KB",
           rating: (4.5 + Math.random() * 0.5).toFixed(1),
           updatedAt: new Date().toLocaleDateString('sk-SK'),
-          content: e.target.result
+          content: e.target.result,
+          updateHistory: [
+            {
+              version: "v1.0",
+              changelog: "Prvotná publikácia aplikácie",
+              date: new Date().toLocaleDateString('sk-SK') + " " + new Date().toLocaleTimeString('sk-SK'),
+              size: (file.size / 1024).toFixed(1) + " KB"
+            }
+          ]
         };
 
         globalCatalog.unshift(newApp);
         publishRetained(TOPIC_VAULT, globalCatalog);
         closePublishModal();
         renderShelves();
+        renderPublicUsers();
 
         document.getElementById('newAppTitle').value = "";
         fileInput.value = "";
-        alert(`✅ Súbor "${newApp.title}" bol úspešne publikovaný a je verejný pre každého!`);
+        alert(`✅ Súbor "${newApp.title}" bol úspešne publikovaný do cloudu!`);
       };
 
       if (type === 'image') reader.readAsDataURL(file);
       else reader.readAsText(file);
     }
 
-    // --- 7. VYDÁVANIE AKTUALIZÁCIE (UPDATE) - IBA PÔVODNÝ AUTOR! ---
+    // --- 7. VYDÁVANIE AKTUALIZÁCIE S CLOUDOVÝM ZÁZNAMOM (IBA AUTOR) ---
     function openUpdateModal(appId) {
       const app = globalCatalog.find(a => a.id === appId);
       if (!app) return;
@@ -877,7 +957,7 @@
       }
 
       const version = document.getElementById('upVersionTag').value.trim() || "v" + (parseFloat(appBeingUpdated.version.replace('v','')) + 0.1).toFixed(1);
-      const changelog = document.getElementById('upChangelog').value.trim() || "Vydaná nová oprava chýb.";
+      const changelog = document.getElementById('upChangelog').value.trim() || "Vydaná nová oprava a cloudová aktualizácia.";
       const fileInput = document.getElementById('upNewFile');
 
       function finalizeUpdate(newContent = null, newSize = null, newExt = null) {
@@ -892,10 +972,20 @@
           else if (newExt === 'html') appBeingUpdated.type = 'html';
         }
 
+        // Uloženie záznamu aktualizácie do histórie cloudu
+        if (!appBeingUpdated.updateHistory) appBeingUpdated.updateHistory = [];
+        appBeingUpdated.updateHistory.unshift({
+          version: version,
+          changelog: changelog,
+          date: new Date().toLocaleDateString('sk-SK') + " " + new Date().toLocaleTimeString('sk-SK'),
+          size: appBeingUpdated.size
+        });
+
+        // TRVALÉ ULOŽENIE VŠETKÝCH UPDATE-OV DO CLOUDU
         publishRetained(TOPIC_VAULT, globalCatalog);
         closeUpdateModal();
         renderShelves();
-        alert(`✅ Aktualizácia ${version} pre aplikáciu "${appBeingUpdated.title}" bola úspešne publikovaná!`);
+        alert(`✅ Aktualizácia ${version} bola trvalo uložená do EMQX cloudu!`);
       }
 
       if (fileInput.files[0]) {
@@ -912,7 +1002,40 @@
       }
     }
 
-    // --- 8. VYKRESLENIE POLÍC A KARIET (VŠETKO JE 100% VEREJNÉ) ---
+    // ZOBRAZENIE CLOUDOVEJ HISTÓRIE UPDATE-OV
+    function showAppHistory(appId) {
+      const app = globalCatalog.find(a => a.id === appId);
+      if (!app) return;
+
+      const cont = document.getElementById('historyModalContent');
+      cont.innerHTML = `<h4 style="margin-bottom:10px; color:var(--gogo-green);">${app.title}</h4>`;
+
+      const history = app.updateHistory || [
+        { version: app.version, changelog: app.changelog || "Základná verzia", date: app.updatedAt, size: app.size }
+      ];
+
+      history.forEach((h, i) => {
+        const item = document.createElement('div');
+        item.style.cssText = "padding:10px; border-bottom:1px solid #eee; margin-bottom:6px;";
+        item.innerHTML = `
+          <div style="display:flex; justify-content:space-between; font-weight:700; font-size:13px;">
+            <span>Verzia: <b style="color:#f57c00;">${h.version}</b></span>
+            <span style="color:#888; font-size:11px;">${h.date}</span>
+          </div>
+          <p style="font-size:12px; color:#555; margin-top:4px;">${h.changelog}</p>
+          <span style="font-size:10px; color:#999;">Veľkosť: ${h.size || 'Neznáma'}</span>
+        `;
+        cont.appendChild(item);
+      });
+
+      document.getElementById('historyModal').style.display = 'flex';
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').style.display = 'none';
+    }
+
+    // --- 8. VYKRESLENIE POLÍC A KARIET ---
     function renderShelves() {
       const search = document.getElementById('storeSearch').value.toLowerCase();
       
@@ -961,7 +1084,6 @@
       const card = document.createElement('div');
       card.className = "app-card";
 
-      // VŠETKO JE VEREJNE VIDITEĽNÉ - bez zámkov
       let iconHtml = '';
       if (app.type === 'python') {
         iconHtml = `<div class="app-thumb-wrap"><i class="fa-brands fa-python app-icon-display" style="color:#306998;"></i></div>`;
@@ -985,22 +1107,22 @@
         </div>
 
         <div class="card-actions-row">
-          <!-- VEREJNÉ SŤAHOVANIE PRE KAŽDÉHO -->
           <button class="btn-store-action btn-get" onclick="downloadApp('${app.id}')">
             <i class="fa-solid fa-download"></i> Inštalovať / Stiahnuť
           </button>
           
-          <!-- VEREJNÉ SPUSTENIE WEBOVÝCH STRÁNOK -->
           ${app.type === 'html' ? `<button class="btn-store-action btn-launch" onclick="launchHtmlPreview('${app.id}')"><i class="fa-solid fa-play"></i> Spustiť Web</button>` : ''}
           
-          <!-- UPDATE IBA PRE AUTORA -->
+          <button class="btn-store-action btn-history" onclick="showAppHistory('${app.id}')">
+            <i class="fa-solid fa-clock-rotate-left"></i> História updatov
+          </button>
+
           ${isOwner ? `<button class="btn-store-action btn-update" onclick="openUpdateModal('${app.id}')"><i class="fa-solid fa-arrows-rotate"></i> Update (Autor)</button>` : ''}
         </div>
       `;
       return card;
     }
 
-    // 100% VEREJNÉ SŤAHOVANIE PRE VŠETKÝCH
     function downloadApp(id) {
       const app = globalCatalog.find(a => a.id === id);
       if (!app) return;
@@ -1014,7 +1136,6 @@
       document.body.removeChild(a);
     }
 
-    // 100% VEREJNÉ SPUSTENIE WEBU
     function launchHtmlPreview(id) {
       const app = globalCatalog.find(a => a.id === id);
       if (!app || app.type !== 'html') return;
@@ -1027,6 +1148,7 @@
     function setStoreSection(sec) {
       document.getElementById('sectionHome').style.display = (sec === 'home') ? 'block' : 'none';
       document.getElementById('sectionPremium').style.display = (sec === 'premium') ? 'block' : 'none';
+      document.getElementById('sectionUsers').style.display = (sec === 'users') ? 'block' : 'none';
       document.getElementById('sectionMyApps').style.display = (sec === 'my_apps') ? 'block' : 'none';
       document.getElementById('sectionPlans').style.display = (sec === 'plans') ? 'block' : 'none';
       document.getElementById('sectionCalendar').style.display = (sec === 'calendar') ? 'block' : 'none';
@@ -1040,6 +1162,10 @@
       } else if (sec === 'premium') {
         document.getElementById('tabVip').classList.add('active');
         document.getElementById('sideLinkVip').classList.add('active');
+      } else if (sec === 'users') {
+        document.getElementById('tabUsers').classList.add('active');
+        document.getElementById('sideLinkUsers').classList.add('active');
+        renderPublicUsers();
       } else if (sec === 'my_apps') {
         document.getElementById('tabMy').classList.add('active');
         document.getElementById('sideLinkMy').classList.add('active');
@@ -1115,9 +1241,9 @@
     function confirmSubscriptionPayment(method) {
       if (!activeCheckoutPlan) return;
       
-      const targetUser = currentUser ? currentUser.username : "guest_" + Math.random().toString(36).substr(2, 6);
+      const targetUser = currentUser ? currentUser.username : "user_" + Math.random().toString(36).substr(2, 6);
       if (!globalUsers[targetUser]) {
-        globalUsers[targetUser] = { username: targetUser, tier: "free", expiry: null };
+        globalUsers[targetUser] = { username: targetUser, tier: "free", expiry: null, joinedAt: new Date().toLocaleDateString('sk-SK') };
       }
 
       globalUsers[targetUser].tier = "premium";
@@ -1127,6 +1253,7 @@
       publishRetained(TOPIC_USERS, globalUsers);
       closeGoPay();
       syncUserStatus();
+      renderPublicUsers();
 
       alert(`✅ Úspešná platba metódou ${method}!\nBalík ${activeCheckoutPlan.name} bol aktivovaný na ${activeCheckoutPlan.days} dní pre účet ${targetUser}.`);
       renderShelves();
@@ -1158,9 +1285,10 @@
       }
     }
 
-    // ŠTART: Všetko sa zobrazí okamžite a verejne
+    // ŠTART: Všetko sa načíta okamžite, verejne a synchronizuje s cloudom
     window.onload = function() {
       renderShelves();
+      renderPublicUsers();
       setupCalendar();
       connectToDatabase();
     };
